@@ -21,7 +21,7 @@ class DecimalTransformer implements DataTransformerInterface
         }        
 
         if (!preg_match("#^(-)?\d+((\.|,)\d+)?$#",$stringValue)) {
-            throw new TransformationFailedException("Cette valeur n'est pas une valeur décimale valide");
+            throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.decimal");
         }
 
         $value = floatval(str_replace(',','.',$stringValue));

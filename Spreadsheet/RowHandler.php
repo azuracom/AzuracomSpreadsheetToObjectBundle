@@ -14,7 +14,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Row;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-
+use Symfony\Component\Form\Exception\TransformationFailedException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class RowHandler implements \Iterator, RowHandlerInterface
 {
@@ -26,6 +27,9 @@ class RowHandler implements \Iterator, RowHandlerInterface
 
     /** @var ValidatorInterface */
     protected $validator;
+
+    /** @var TranslatorInterface */
+    protected $translator;
 
     protected $dispatcher;
 
@@ -40,11 +44,13 @@ class RowHandler implements \Iterator, RowHandlerInterface
     public function __construct(
         ColumnTypeRegistry $registry,
         ValidatorInterface $validator,
-        EventDispatcherInterface $dispatcher
+        EventDispatcherInterface $dispatcher,
+        TranslatorInterface $translator
     ) {
         $this->registry = $registry;
         $this->validator = $validator;
         $this->dispatcher = $dispatcher;
+        $this->translator = $translator;
     }
 
     public function add(string $name, ?string $type = null, array $options = [])
@@ -75,7 +81,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
         $this->currentRow = $row->getRowIndex();
 
         foreach ($row->getCellIterator('A', $this->getLastColumn()) as $column => $cell) {
-            $type = $this->get($column, 'column');
+            $type = $this->getByColumn($column);
             $type->setValue($cell->getValue());
         }
     }
@@ -89,20 +95,11 @@ class RowHandler implements \Iterator, RowHandlerInterface
 
     public function setSheetRowContent(Worksheet $sheet, int $rowNumber, $data, string $key = 'default')
     {
-        $datas = is_object($data) || !$this->isArraySimple($data) ? [$data] : $data;
         foreach ($this->columnTypes as $type) {
-            foreach ($datas as $data) {
-                if ($type->isDataMapped($data,$key)) {
-                    $sheet->setCellValue($type->getColumn() . $rowNumber, $type->getDataValue($data));
-                }
+            if ($type->isDataMapped($data, $key)) {
+                $sheet->setCellValue($type->getColumn() . $rowNumber, $type->getDataValue($data));
             }
         }
-    }
-
-    public function isArraySimple(array $array)
-    {
-        $key = array_key_first($array);
-        return is_int($key);
     }
 
     public static function int2ExcelColumn($num)
@@ -118,10 +115,21 @@ class RowHandler implements \Iterator, RowHandlerInterface
     }
 
 
-    public function get(string $name, string $attribute = 'name'): ?ColumnTypeInterface
+    public function get(string $name, string $key = 'default'): ?ColumnTypeInterface
     {
         foreach ($this->columnTypes as $child) {
-            if ($name == $child->{"get$attribute"}()) {
+            if ($name === $child->getName() && $child->getOption('key') === $key) {
+                return $child;
+            }
+        }
+
+        return null;
+    }
+
+    public function getByColumn($column)
+    {
+        foreach ($this->columnTypes as $child) {
+            if ($column === $child->getColumn()) {
                 return $child;
             }
         }
@@ -143,7 +151,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
         //first assign all values
         foreach ($this->columnTypes as $type) {
             //check if the conf is ok for the current data object and setter is required
-            if (!$type->isDataMapped($data,$key) || ($type->getOption('setter') === false)) {
+            if (!$type->isDataMapped($data, $key) || ($type->getOption('setter') === false)) {
                 continue;
             }
 
@@ -160,7 +168,6 @@ class RowHandler implements \Iterator, RowHandlerInterface
                 $oldValue = $type->getDataValue($data, false);
 
                 if ($type->hasChanged($newValue, $oldValue)) {
-                    
                     if ($type->dataCanBeUpdated($data)) {
                         $oldStringValue = $type->getDataValue($data, true);
                         $newStringValue = $type->getValue(null);
@@ -171,28 +178,30 @@ class RowHandler implements \Iterator, RowHandlerInterface
                         //validate conf contraints
                         $valueErrors = $this->validator->validate($newValue, $type->getOption('constraints'));
                         foreach ($valueErrors as $error) {
-                            $errors[] = sprintf(
-                                "Ligne %d colonne %s: %s",
-                                $this->currentRow,
-                                $type->getColumn(),
-                                $error->getMessage()
-                            );
+                            $errors[] = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
+                                '%row%' => $this->currentRow,
+                                '%column%' => $type->getColumn(),
+                                '%error%' => $error->getMessage()
+                            ]);
                         }
                     } else {
-                        $errors[] =  sprintf(
-                            "Ligne %d colonne %s: Impossible de modifier cette valeur",
-                            $this->currentRow,
-                            $type->getColumn()
-                        );
+                        $errors[] = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.value_not_editable", [
+                            '%row%' => $this->currentRow,
+                            '%column%' => $type->getColumn(),
+                        ]);
                     }
                 }
             } catch (\Exception $e) {
-                $errors[] = sprintf(
-                    "Ligne %d colonne %s: %s",
-                    $this->currentRow,
-                    $type->getColumn(),
-                    $e->getMessage()
-                );
+                //transformation exception try to translate error
+                $error = $e instanceof TransformationFailedException ?
+                    $this->translator->trans($e->getMessage(), $e->getInvalidMessageParameters()) :
+                    $e->getMessage();
+
+                $errors[] = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
+                    '%row%' => $this->currentRow,
+                    '%column%' => $type->getColumn(),
+                    '%error%' => $error
+                ]);
             }
 
             if ($this->dispatcher->hasListeners(Events::POST_SET_VALUE)) {
@@ -216,22 +225,20 @@ class RowHandler implements \Iterator, RowHandlerInterface
             foreach ($this->columnTypes as $type) {
                 $errorMatchPath = $type->getOption('error_match_path');
                 if ($type->getName() == $name || ($errorMatchPath && preg_match("#$errorMatchPath#", $name))) {
-                    $message = sprintf(
-                        "Ligne %d colonne %s: %s",
-                        $this->currentRow,
-                        $type->getColumn(),
-                        $error->getMessage()
-                    );
+                    $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
+                        '%row%' => $this->currentRow,
+                        '%column%' => $type->getColumn(),
+                        '%error%' =>  $error->getMessage()
+                    ]);
                     break;
                 }
             }
             if (!$message) {
-                $message = sprintf(
-                    "Ligne %d propriété %s: %s",
-                    $this->currentRow,
-                    $name,
-                    $error->getMessage()
-                );
+                $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_property", [
+                    '%row%' => $this->currentRow,
+                    '%column%' => $name,
+                    '%error%' =>  $error->getMessage()
+                ]);
             }
             $errors[] = $message;
         }
@@ -282,7 +289,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
 
     /**
      * Get the value of currentKey
-     */ 
+     */
     public function getCurrentKey()
     {
         return $this->currentKey;
@@ -292,7 +299,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
      * Set the value of currentKey
      *
      * @return  self
-     */ 
+     */
     public function setCurrentKey($currentKey)
     {
         $this->currentKey = $currentKey;

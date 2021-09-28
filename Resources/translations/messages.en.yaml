@@ -1,0 +1,11 @@
+azuracom_spreadsheet_to_object:
+    data_transformer_exception:
+        boolean: 'Accepted values: 0 or 1'
+        datetime: This value is not a valid date
+        decimal: This vallue is not a valid number
+        entity: Value %value% not found
+        integer: This value is not a valid integer
+    row_handler:
+        error_at_column: 'Row %row% column %column% : %error%'
+        error_at_property: 'Row %row% property %propety% : %error%'
+        value_not_editable: 'Row %row% column %column% : This property is not editable'

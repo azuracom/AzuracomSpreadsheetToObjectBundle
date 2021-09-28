@@ -18,7 +18,7 @@ class BooleanTransformer implements DataTransformerInterface
             return null;
         }
         if ($stringValue != 1 && $stringValue != 0) {
-            throw new TransformationFailedException("Valeurs acceptées: 0 ou 1");
+            throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.boolean");
         }
 
         return $stringValue == 1 ? true : false;

@@ -29,7 +29,7 @@ class DateTimeTransformer implements DataTransformerInterface
         
         $value = \DateTime::createFromFormat($this->format, $value);
         if($value === false){
-            throw new TransformationFailedException("Impossible de convertir cette valeur en date");
+            throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.datetime");
         }
 
         if(!$this->time){
