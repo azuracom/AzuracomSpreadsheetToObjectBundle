@@ -1,0 +1,360 @@
+<?php
+
+namespace Azuracom\SpreadsheetToObject\ColumnType;
+
+use Azuracom\SpreadsheetToObject\Spreadsheet\RowHandler;
+
+use Symfony\Component\Form\Util\StringUtil;
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\Validator\Constraint;
+
+abstract class AbstractType implements ColumnTypeInterface
+{
+    const ACCESSOR_DEFAULT = 'accessor_default';
+    const ACCESSOR_MANUAL = 'accessor_manual';
+    const ACCESSOR_CALLBACK = 'accessor_callback';
+    const ACCESSOR_USER_FUNC_ARRAY = 'accessor_user_func_array';
+
+    /** @var string */
+    protected $column;
+
+    /** @var string */
+    protected $name;
+
+    /** @var mixed */
+    protected $owner;
+
+    /** @var mixed */
+    protected $value;
+
+    /** @var array */
+    protected $options;
+
+    /** @var string */
+    protected $setterType;
+
+    /** @var string */
+    protected $getterType;
+
+    protected $propertyAccessor;
+
+    /** @var DataTransformerInterface[] */
+    protected $transformers;
+
+    /**
+     * @var string $column excel column (ex: A, AF,ZZZ)
+     * @var string $name an unique name to identifiy this
+     */
+    public function init($column, $name, array $options = [])
+    {
+        $this->column = $column;
+        $this->name = $name;
+
+        $resolver = new OptionsResolver();
+        $this->configureOptions($resolver);
+        $this->options = $resolver->resolve($options);
+
+        $this->resetModelTransformers();
+        if($transformer = $this->getDefaultTransformer($this->options)){
+            $this->addTransformer($transformer);
+        }
+
+        $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
+    }
+
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        //default values
+        $resolver->setDefaults([
+            //label used for create excel header
+            'label' => null,
+            /*
+            null: reuse name to create a setter (name = "some.randome.name.code",methode "setCode" will be called)
+            callable: use a callback function to modify data with arguments($data,$this)
+            array: key 0 is data method key 1 is an array for arguments ['setToto',[$args,'@']] use '@' to replace with cell value
+            string: manually define the method to call
+            false: ignored
+            */
+            'setter' => null,
+            'getter' => null,
+            //set if the data value can be updated
+            'allow_update' => true,
+            //Add constraint to validate transformed value
+            'constraints' => [],
+            //add regex to add error on this config
+            'error_match_path' => null,
+            //some info to display to the user
+            'help' => null,
+            //set if help is a template to more advanced info to display
+            'help_is_html' => false,
+            'has_changed_callback'=>null,
+            //the data to return if no data found in cell
+            'empty_data' => null,
+        ]);
+
+        //validation
+        $resolver->setAllowedTypes('label', ['string', 'null']);
+        $resolver->setAllowedTypes('setter', ['null', 'string', 'array', 'callable', 'boolean']);
+        $resolver->setAllowedTypes('getter', ['null', 'string', 'array', 'callable', 'boolean']);
+        $resolver->setAllowedTypes('constraints', [Constraint::class . '[]']);
+        $resolver->setAllowedTypes('allow_update', ['boolean', 'callable']);
+        $resolver->setAllowedTypes('error_match_path', ['string', 'null']);
+        $resolver->setAllowedTypes('help', ['string', 'null']);
+        $resolver->setAllowedTypes('has_changed_callback', ['null', 'callable']);
+
+    }
+
+    public function isDataMapped($data): bool
+    {
+        echo 'TODO';exit;
+    }
+
+    public function guessAccessorType($value)
+    {
+        if (is_null($value)) {
+            return self::ACCESSOR_DEFAULT;
+        } else if (is_string($value)) {
+            return self::ACCESSOR_MANUAL;
+        } elseif (is_array($value)) {
+            return  self::ACCESSOR_USER_FUNC_ARRAY;
+        } elseif (is_callable($value)) {
+            return self::ACCESSOR_CALLBACK;
+        }
+
+        return null;
+    }
+
+    public function getDataValue($data, bool $transformed = true)
+    {
+        $getter = $this->getOption('getter');
+
+        if ($getter === false) {
+            return;
+        }
+
+        $value = null;
+        switch ($this->getterType) {
+            case self::ACCESSOR_DEFAULT:
+                try {
+                    $value = $this->propertyAccessor->getValue($data, $getter);
+                } catch (\Exception $e) {
+                }
+                break;
+
+            case self::ACCESSOR_MANUAL:
+                $value = $data->{$getter}();
+                break;
+
+            case self::ACCESSOR_USER_FUNC_ARRAY:
+                $value = call_user_func_array([$data, $getter[0]], $getter[1]);
+                break;
+
+            case self::ACCESSOR_CALLBACK:
+                $value = $getter($data, $this);
+                break;
+        }
+
+        if (!$transformed) {
+            return $value;
+        }
+
+        foreach($this->transformers as $transformer){
+            $value = $transformer->transform($value);
+        }
+
+        return $value;
+    }
+
+    public function setDataValue($data, $value)
+    {
+        $setter = $this->getOption('setter');
+
+        if ($setter === false) {
+            return;
+        }
+
+        switch ($this->setterType) {
+            case self::ACCESSOR_DEFAULT:
+                $this->propertyAccessor->setValue($data, $setter, $value);
+                break;
+
+            case self::ACCESSOR_MANUAL:
+                $data->{$setter}($value);
+                break;
+
+            case self::ACCESSOR_USER_FUNC_ARRAY:
+                $args = $setter[1];
+                foreach ($args as $name => $tmp) {
+                    if ($tmp == '@') {
+                        $tmp = $value;
+                    }
+                    $args[$name] = $tmp;
+                }
+                call_user_func_array([$data, $setter[0]], $args);
+                break;
+
+            case self::ACCESSOR_CALLBACK:
+                $setter($data, $this);
+                break;
+        }
+
+        return $value;
+    }
+
+    public function getOption(string $name, $defaultValue = null)
+    {
+        $value = isset($this->options[$name]) ? $this->options[$name] : null;
+        return $value !== null ? $value : $defaultValue;
+    }
+
+    public function getLabel(): string
+    {
+        return $this->getOption('label', $this->getName());
+    }
+
+    public function dataCanBeUpdated($data): bool
+    {
+        $allowUpdate = $this->getOption('allow_update');
+        return is_bool($allowUpdate) ? $allowUpdate : $allowUpdate($data);
+    }
+
+    /**
+     * Get the value of name
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set the value of name
+     *
+     * @return  self
+     */
+    public function setName($name): ColumnTypeInterface
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of column
+     */
+    public function getColumn(): string
+    {
+        return $this->column;
+    }
+
+    /**
+     * Set the value of column
+     *
+     * @return  self
+     */
+    public function setColumn(string $column): ColumnTypeInterface
+    {
+        $this->column = $column;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of value
+     */
+    public function getValue($transformation = 'reverseTransform')
+    {        
+        $value = $this->value;
+
+
+        if($transformation !== null){
+            $transformers = $transformation == 'reverseTransform' ? array_reverse($this->transformers) : $this->transformers;
+            foreach($transformers as $transformer){
+                $value = $transformer->{$transformation}($value);
+            }
+        }
+
+        return $value === null ? $this->getOption('empty_data') : $value;
+    }
+
+    /**
+     * Set the value of value
+     *
+     * @return  self
+     */
+    public function setValue($value): ColumnTypeInterface
+    {
+        $this->value = $value;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of owner
+     */
+    public function getOwner() : ?RowHandler
+    {
+        return $this->owner;
+    }
+
+    /**
+     * Set the value of owner
+     *
+     * @return  self
+     */
+    public function setOwner(RowHandler $owner)
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getDefaultTransformer($options): ?DataTransformerInterface
+    {
+        return null;
+    }
+
+    public static function getPrefix(): string
+    {
+        return StringUtil::fqcnToBlockPrefix(static::class) ?: '';
+    }
+
+    public function hasChanged($newValue, $oldValue): bool
+    {
+        if($callback = $this->getOption('has_changed_callback')){
+            return $callback($newValue,$oldValue);
+        }
+
+        if ($newValue === null && $oldValue !== null || $newValue !== null && $oldValue === null) {
+            return true;
+        }
+
+        return $this->hasChangedInner($newValue,$oldValue);
+        
+    }
+
+    public function hasChangedInner($newValue, $oldValue): bool
+    {
+        return $newValue !== $oldValue;
+    }
+
+
+    public function addTransformer(DataTransformerInterface $transformer, $forceAppend = false) : ColumnTypeInterface
+    {
+        if ($forceAppend) {
+            $this->transformers[] = $transformer;
+        } else {
+            array_unshift($this->transformers, $transformer);
+        }
+
+        return $this;
+    }
+
+    public function resetModelTransformers() : ColumnTypeInterface
+    {
+        $this->transformers = [];
+
+        return $this;
+    }
+}

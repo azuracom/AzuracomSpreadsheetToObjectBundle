@@ -1,0 +1,29 @@
+<?php
+
+namespace Azuracom\SpreadsheetToObject\DataTransformer;
+
+
+use Symfony\Component\Form\Exception\TransformationFailedException;
+
+class DecimalTransformer implements DataTransformerInterface
+{
+
+    public function transform($decimalValue)
+    {
+        return $decimalValue;
+    }
+
+    public function reverseTransform($stringValue)
+    {
+        if ($stringValue === null) {
+            return null;
+        }        
+
+        if (!preg_match("#^(-)?\d+((\.|,)\d+)?$#",$stringValue)) {
+            throw new TransformationFailedException("Cette valeur n'est pas une valeur décimale valide");
+        }
+
+        $value = floatval(str_replace(',','.',$stringValue));
+        return $value;
+    }
+}

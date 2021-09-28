@@ -1,0 +1,26 @@
+{
+    "name": "azuracom/spreadsheet-to-object-bundle",
+    "type": "symfony-bundle",
+    "description": "Symfony spreadsheet",
+    "keywords": [
+        "procespreadsheetss",
+        "symfony"
+    ],
+    "authors": [
+        {
+            "name": "Thibaut DUMALIN",
+            "email": "tdumalin@azuracom.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.2"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Azuracom\\SpreadsheetToObject\\": ""
+        }
+    }
+}
