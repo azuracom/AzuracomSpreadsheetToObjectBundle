@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
 use Doctrine\Common\Collections\ArrayCollection;
-
+use Symfony\Component\Form\DataTransformerInterface;
 
 class CollectionTransformer implements DataTransformerInterface
 {

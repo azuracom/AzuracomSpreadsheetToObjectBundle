@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Azuracom\SpreadsheetToObject\DataTransformer\BooleanTransformer;
-
+use Symfony\Component\Form\DataTransformerInterface;
 
 class BooleanType extends AbstractType
 {

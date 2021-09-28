@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Azuracom\SpreadsheetToObject\DataTransformer\DecimalTransformer;
-
+use Symfony\Component\Form\DataTransformerInterface;
 
 class DecimalType extends AbstractType
 {

@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Azuracom\SpreadsheetToObject\DataTransformer\PercentTransformer;
-
+use Symfony\Component\Form\DataTransformerInterface;
 
 class PercentType extends AbstractType
 {

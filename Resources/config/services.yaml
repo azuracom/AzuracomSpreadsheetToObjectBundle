@@ -9,7 +9,12 @@ services:
         class: Azuracom\SpreadsheetToObject\Spreadsheet\RowHandler
 
     azuracom.spresheet_to_object.column_type_registry:
-        class: Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry        
+        class: Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry   
+
+    Azuracom\SpreadsheetToObject\ColumnType\:
+        resource: '../../ColumnType'
+        tags: ['azuracom_spresheet_to_object.column_type']    
 
     #aliases
     Azuracom\SpreadsheetToObject\Spreadsheet\RowHandlerInterface: '@azuracom.spresheet_to_object.row_handler'
+    Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry: '@azuracom.spresheet_to_object.column_type_registry'

@@ -14,6 +14,6 @@ interface RowHandlerInterface
     public function setSheetHeader(Worksheet $sheet,int $rowNumber = 1);
     public function setSheetRowContent(Worksheet $sheet,int $rowNumber,$data,string $key = 'default');
     public function get(string $name,string $attribute = 'name'): ?ColumnTypeInterface;
-    public function setDataValues($data,array $validationGroups = []);
+    public function setDataValues($data,?array $validationGroups = null,$key = 'default');
     
 }

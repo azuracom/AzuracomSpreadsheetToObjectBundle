@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Symfony\Component\Form\CallbackTransformer;
-
+use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 

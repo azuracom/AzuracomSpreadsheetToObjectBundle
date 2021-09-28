@@ -1,7 +1,8 @@
 <?php
 
-namespace Azuracom\ProcessBundle\DependencyInjection;
+namespace Azuracom\SpreadsheetToObject\DependencyInjection;
 
+use Azuracom\SpreadsheetToObject\ColumnType\ColumnTypeInterface;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -16,7 +17,7 @@ class AzuracomSpreadsheetToObjectExtension extends Extension
         $loader->load('services.yaml');
 
         //add tag to all class that implements HandlerInterface
-        $container->registerForAutoconfiguration(HandlerInterface::class)
-            ->addTag("azuracom_spresheet_to_object.excel_column_type");
+        $container->registerForAutoconfiguration(ColumnTypeInterface::class)
+            ->addTag("azuracom_spresheet_to_object.column_type");
     }
 }

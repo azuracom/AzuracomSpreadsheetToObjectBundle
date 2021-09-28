@@ -19,9 +19,10 @@ class ColumnTypePass implements CompilerPassInterface
         $definition = $container->findDefinition("azuracom.spresheet_to_object.column_type_registry");
 
         $servicesMap = [];
+        //dump($container->findTaggedServiceIds("azuracom_spresheet_to_object.column_type", true) );exit;
 
         // Builds an array with fully-qualified type class names as keys and service IDs as values
-        foreach ($container->findTaggedServiceIds("azuracom_spresheet_to_object.excel_column_type", true) as $serviceId => $tag) {
+        foreach ($container->findTaggedServiceIds("azuracom_spresheet_to_object.column_type", true) as $serviceId => $tag) {
             // Add form type service to the service locator
             $serviceDefinition = $container->getDefinition($serviceId);
             $servicesMap[$serviceDefinition->getClass()] = new Reference($serviceId);

@@ -2,7 +2,7 @@
 
 namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
-
+use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
 class BooleanTransformer implements DataTransformerInterface

@@ -2,6 +2,8 @@
 
 namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
+use Symfony\Component\Form\DataTransformerInterface;
+
 class PercentTransformer implements DataTransformerInterface
 {
     private $decimalTransformer;

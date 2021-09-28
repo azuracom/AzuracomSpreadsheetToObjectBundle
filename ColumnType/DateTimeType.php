@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Azuracom\SpreadsheetToObject\DataTransformer\DateTimeTransformer;
-
+use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class DateTimeType extends AbstractType

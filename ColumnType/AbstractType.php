@@ -2,8 +2,8 @@
 
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
+use Symfony\Component\Form\DataTransformerInterface;
 use Azuracom\SpreadsheetToObject\Spreadsheet\RowHandler;
-
 use Symfony\Component\Form\Util\StringUtil;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -57,7 +57,7 @@ abstract class AbstractType implements ColumnTypeInterface
         $this->options = $resolver->resolve($options);
 
         $this->resetModelTransformers();
-        if($transformer = $this->getDefaultTransformer($this->options)){
+        if ($transformer = $this->getDefaultTransformer($this->options)) {
             $this->addTransformer($transformer);
         }
 
@@ -89,9 +89,11 @@ abstract class AbstractType implements ColumnTypeInterface
             'help' => null,
             //set if help is a template to more advanced info to display
             'help_is_html' => false,
-            'has_changed_callback'=>null,
+            'has_changed_callback' => null,
             //the data to return if no data found in cell
             'empty_data' => null,
+            //the key to define if an object is mapped to a column
+            'key' => null,
         ]);
 
         //validation
@@ -104,11 +106,21 @@ abstract class AbstractType implements ColumnTypeInterface
         $resolver->setAllowedTypes('help', ['string', 'null']);
         $resolver->setAllowedTypes('has_changed_callback', ['null', 'callable']);
 
+        //normalize option
+        $resolver->setNormalizer('setter', function (Options $options, $value) {
+            $this->setterType = $this->guessAccessorType($value);
+            return $value === null ? $this->name : $value;
+        });
+
+        $resolver->setNormalizer('getter', function (Options $options, $value) {
+            $this->getterType = $this->guessAccessorType($value);
+            return $value === null ? $this->name : $value;
+        });
     }
 
-    public function isDataMapped($data): bool
+    public function isDataMapped($data, $key): bool
     {
-        echo 'TODO';exit;
+        return $this->options['key'] === $key;
     }
 
     public function guessAccessorType($value)
@@ -160,7 +172,7 @@ abstract class AbstractType implements ColumnTypeInterface
             return $value;
         }
 
-        foreach($this->transformers as $transformer){
+        foreach ($this->transformers as $transformer) {
             $value = $transformer->transform($value);
         }
 
@@ -170,11 +182,9 @@ abstract class AbstractType implements ColumnTypeInterface
     public function setDataValue($data, $value)
     {
         $setter = $this->getOption('setter');
-
         if ($setter === false) {
             return;
         }
-
         switch ($this->setterType) {
             case self::ACCESSOR_DEFAULT:
                 $this->propertyAccessor->setValue($data, $setter, $value);
@@ -264,13 +274,13 @@ abstract class AbstractType implements ColumnTypeInterface
      * Get the value of value
      */
     public function getValue($transformation = 'reverseTransform')
-    {        
+    {
         $value = $this->value;
 
 
-        if($transformation !== null){
+        if ($transformation !== null) {
             $transformers = $transformation == 'reverseTransform' ? array_reverse($this->transformers) : $this->transformers;
-            foreach($transformers as $transformer){
+            foreach ($transformers as $transformer) {
                 $value = $transformer->{$transformation}($value);
             }
         }
@@ -293,7 +303,7 @@ abstract class AbstractType implements ColumnTypeInterface
     /**
      * Get the value of owner
      */
-    public function getOwner() : ?RowHandler
+    public function getOwner(): ?RowHandler
     {
         return $this->owner;
     }
@@ -322,16 +332,15 @@ abstract class AbstractType implements ColumnTypeInterface
 
     public function hasChanged($newValue, $oldValue): bool
     {
-        if($callback = $this->getOption('has_changed_callback')){
-            return $callback($newValue,$oldValue);
+        if ($callback = $this->getOption('has_changed_callback')) {
+            return $callback($newValue, $oldValue);
         }
 
         if ($newValue === null && $oldValue !== null || $newValue !== null && $oldValue === null) {
             return true;
         }
 
-        return $this->hasChangedInner($newValue,$oldValue);
-        
+        return $this->hasChangedInner($newValue, $oldValue);
     }
 
     public function hasChangedInner($newValue, $oldValue): bool
@@ -340,7 +349,7 @@ abstract class AbstractType implements ColumnTypeInterface
     }
 
 
-    public function addTransformer(DataTransformerInterface $transformer, $forceAppend = false) : ColumnTypeInterface
+    public function addTransformer(DataTransformerInterface $transformer, $forceAppend = false): ColumnTypeInterface
     {
         if ($forceAppend) {
             $this->transformers[] = $transformer;
@@ -351,7 +360,7 @@ abstract class AbstractType implements ColumnTypeInterface
         return $this;
     }
 
-    public function resetModelTransformers() : ColumnTypeInterface
+    public function resetModelTransformers(): ColumnTypeInterface
     {
         $this->transformers = [];
 

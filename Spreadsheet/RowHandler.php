@@ -35,6 +35,8 @@ class RowHandler implements \Iterator, RowHandlerInterface
 
     protected $currentRow = 0;
 
+    protected $currentKey = 'default';
+
     public function __construct(
         ColumnTypeRegistry $registry,
         ValidatorInterface $validator,
@@ -45,10 +47,11 @@ class RowHandler implements \Iterator, RowHandlerInterface
         $this->dispatcher = $dispatcher;
     }
 
-    public function add(string $name,?string $type = null,array $options = [])
+    public function add(string $name, ?string $type = null, array $options = [])
     {
         $column = self::int2ExcelColumn($this->lastColumnIndex);
         $type = $type == null ? ColumnType::class : $type;
+        $options['key'] = isset($options['key']) ? $options['key'] : $this->currentKey;
 
         $child = clone $this->registry->getType($type);
         $child->init($column, $name, $options);
@@ -60,7 +63,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
         return $this;
     }
 
-    public function addEventListener(string $eventName,callable $listener,int $priority = 0)
+    public function addEventListener(string $eventName, callable $listener, int $priority = 0)
     {
         $this->dispatcher->addListener($eventName, $listener, $priority);
 
@@ -77,7 +80,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
         }
     }
 
-    public function setSheetHeader(Worksheet $sheet,int $rowNumber = 1)
+    public function setSheetHeader(Worksheet $sheet, int $rowNumber = 1)
     {
         foreach ($this->columnTypes as $type) {
             $sheet->setCellValue($type->getColumn() . $rowNumber,  $type->getLabel());
@@ -89,7 +92,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
         $datas = is_object($data) || !$this->isArraySimple($data) ? [$data] : $data;
         foreach ($this->columnTypes as $type) {
             foreach ($datas as $data) {
-                if ($type->isDataMapped($data)) {
+                if ($type->isDataMapped($data,$key)) {
                     $sheet->setCellValue($type->getColumn() . $rowNumber, $type->getDataValue($data));
                 }
             }
@@ -115,7 +118,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
     }
 
 
-    public function get(string $name,string $attribute = 'name'): ?ColumnTypeInterface
+    public function get(string $name, string $attribute = 'name'): ?ColumnTypeInterface
     {
         foreach ($this->columnTypes as $child) {
             if ($name == $child->{"get$attribute"}()) {
@@ -126,7 +129,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
         return null;
     }
 
-    public function setDataValues($data, array $validationGroups = [])
+    public function setDataValues($data, ?array $validationGroups = null, $key = 'default')
     {
         $errors = [];
         $changes = [];
@@ -140,7 +143,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
         //first assign all values
         foreach ($this->columnTypes as $type) {
             //check if the conf is ok for the current data object and setter is required
-            if (!$type->isDataMapped($data) || ($type->getOption('setter') === false)) {
+            if (!$type->isDataMapped($data,$key) || ($type->getOption('setter') === false)) {
                 continue;
             }
 
@@ -157,8 +160,8 @@ class RowHandler implements \Iterator, RowHandlerInterface
                 $oldValue = $type->getDataValue($data, false);
 
                 if ($type->hasChanged($newValue, $oldValue)) {
+                    
                     if ($type->dataCanBeUpdated($data)) {
-
                         $oldStringValue = $type->getDataValue($data, true);
                         $newStringValue = $type->getValue(null);
 
@@ -275,5 +278,25 @@ class RowHandler implements \Iterator, RowHandlerInterface
     public function valid()
     {
         return isset($this->columnTypes[$this->position]);
+    }
+
+    /**
+     * Get the value of currentKey
+     */ 
+    public function getCurrentKey()
+    {
+        return $this->currentKey;
+    }
+
+    /**
+     * Set the value of currentKey
+     *
+     * @return  self
+     */ 
+    public function setCurrentKey($currentKey)
+    {
+        $this->currentKey = $currentKey;
+
+        return $this;
     }
 }

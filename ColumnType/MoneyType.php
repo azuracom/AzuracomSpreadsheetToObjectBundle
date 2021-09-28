@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Azuracom\SpreadsheetToObject\DataTransformer\MoneyTransformer;
-
+use Symfony\Component\Form\DataTransformerInterface;
 
 class MoneyType extends AbstractType
 {

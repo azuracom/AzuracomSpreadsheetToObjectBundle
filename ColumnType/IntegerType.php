@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Azuracom\SpreadsheetToObject\DataTransformer\IntegerTransformer;
-
+use Symfony\Component\Form\DataTransformerInterface;
 
 class IntegerType extends AbstractType
 {

@@ -2,6 +2,7 @@
 
 namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
+use Symfony\Component\Form\DataTransformerInterface;
 
 class MoneyTransformer implements DataTransformerInterface
 {

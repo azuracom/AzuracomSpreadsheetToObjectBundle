@@ -2,7 +2,7 @@
 
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
-use Azuracom\SpreadsheetToObject\DataTransformer\DataTransformerInterface;
+use Symfony\Component\Form\DataTransformerInterface;
 use Azuracom\SpreadsheetToObject\Spreadsheet\RowHandler;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -19,7 +19,7 @@ interface ColumnTypeInterface
     public function setValue($value): self;
     public function getDefaultTransformer($options): ?DataTransformerInterface;
     public function dataCanBeUpdated($data): bool;
-    public function isDataMapped($data): bool;
+    public function isDataMapped($data,string $key): bool;
     public function getDataValue($data, bool $transformed = true);
     public function setDataValue($data, $value);
     public function hasChanged($newValue, $oldValue): bool;

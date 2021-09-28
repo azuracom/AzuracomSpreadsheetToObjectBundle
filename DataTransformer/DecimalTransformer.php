@@ -4,6 +4,7 @@ namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
 
 use Symfony\Component\Form\Exception\TransformationFailedException;
+use Symfony\Component\Form\DataTransformerInterface;
 
 class DecimalTransformer implements DataTransformerInterface
 {
