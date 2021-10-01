@@ -44,7 +44,9 @@ class EntityTransformer implements DataTransformerInterface
             return $this->items[$key];
         }
         
-        throw new TransformationFailedException(sprintf("azuracom_spreadsheet_to_object.data_transformer_exception.entity",$value));
+        throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.entity",0,null,null,[
+            '%value%' => $value
+        ]);
     }
 
     protected function iniItems()

@@ -2,7 +2,7 @@ azuracom_spreadsheet_to_object:
     data_transformer_exception:
         boolean: 'Accepted values: 0 or 1'
         datetime: This value is not a valid date
-        decimal: This vallue is not a valid number
+        decimal: This value is not a valid number
         entity: Value %value% not found
         integer: This value is not a valid integer
     row_handler:
