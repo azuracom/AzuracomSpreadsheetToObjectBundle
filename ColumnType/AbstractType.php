@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Symfony\Component\Form\DataTransformerInterface;
-use Azuracom\SpreadsheetToObject\Spreadsheet\RowHandler;
+use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
 use Symfony\Component\Form\Util\StringUtil;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -16,9 +16,6 @@ abstract class AbstractType implements ColumnTypeInterface
     const ACCESSOR_MANUAL = 'accessor_manual';
     const ACCESSOR_CALLBACK = 'accessor_callback';
     const ACCESSOR_USER_FUNC_ARRAY = 'accessor_user_func_array';
-
-    /** @var string */
-    protected $column;
 
     /** @var string */
     protected $name;
@@ -47,9 +44,8 @@ abstract class AbstractType implements ColumnTypeInterface
      * @var string $column excel column (ex: A, AF,ZZZ)
      * @var string $name an unique name to identifiy this
      */
-    public function init($column, $name, array $options = [])
+    public function init(string $name, array $options = [])
     {
-        $this->column = $column;
         $this->name = $name;
 
         $resolver = new OptionsResolver();
@@ -94,6 +90,13 @@ abstract class AbstractType implements ColumnTypeInterface
             'empty_data' => null,
             //the key to define if an object is mapped to a column
             'key' => null,
+            
+            'transformation_error_code' => 0,
+            //cell coordinate stuff
+            'row' => null,
+            'column' => null,
+            'cell' => null
+
         ]);
 
         //validation
@@ -105,6 +108,11 @@ abstract class AbstractType implements ColumnTypeInterface
         $resolver->setAllowedTypes('error_match_path', ['string', 'null']);
         $resolver->setAllowedTypes('help', ['string', 'null']);
         $resolver->setAllowedTypes('has_changed_callback', ['null', 'callable']);
+        $resolver->setAllowedTypes('row', ['null', 'int']);
+        $resolver->setAllowedTypes('column', ['null', 'string']);
+        $resolver->setAllowedTypes('cell', ['null', 'string']);
+        $resolver->setAllowedTypes('transformation_error_code', ['int']);
+
 
         //normalize option
         $resolver->setNormalizer('setter', function (Options $options, $value) {
@@ -115,6 +123,45 @@ abstract class AbstractType implements ColumnTypeInterface
         $resolver->setNormalizer('getter', function (Options $options, $value) {
             $this->getterType = $this->guessAccessorType($value);
             return $value === null ? $this->name : $value;
+        });
+
+        $resolver->setNormalizer('row', function (Options $options, $value) {
+            if ($value) {
+                return $value;
+            }
+
+            if ($options['cell']) {
+                $matches = [];
+                preg_match("#\d+#", $options['cell'], $matches, PREG_OFFSET_CAPTURE);
+                $offset = $matches[0][1];
+                $length = strlen($options['cell']);
+                return substr($options['cell'], - ($length - $offset));
+            }
+
+            return null;
+        });
+
+        $resolver->setNormalizer('column', function (Options $options, $value) {
+            if ($value) {
+                return $value;
+            }
+
+            if ($options['cell']) {
+                $matches = [];
+                preg_match("#\d+#", $options['cell'], $matches, PREG_OFFSET_CAPTURE);
+                $offset = $matches[0][1];
+                return substr($options['cell'], 0, $offset);
+            }
+
+            return $this->getOwner()->getDefaultColumn();
+        });
+
+        $resolver->setNormalizer('key', function (Options $options, $value) {
+            if ($value) {
+                return $value;
+            }
+
+            return $this->getOwner()->getCurrentKey();
         });
     }
 
@@ -255,20 +302,15 @@ abstract class AbstractType implements ColumnTypeInterface
      */
     public function getColumn(): string
     {
-        return $this->column;
+        return $this->getOption('column');
     }
 
-    /**
-     * Set the value of column
-     *
-     * @return  self
-     */
-    public function setColumn(string $column): ColumnTypeInterface
+    public function getRow(): ?int
     {
-        $this->column = $column;
-
-        return $this;
+        return $this->getOption('row');
     }
+
+
 
     /**
      * Get the value of value
@@ -303,7 +345,7 @@ abstract class AbstractType implements ColumnTypeInterface
     /**
      * Get the value of owner
      */
-    public function getOwner(): ?RowHandler
+    public function getOwner(): ?HandlerInterface
     {
         return $this->owner;
     }
@@ -313,7 +355,7 @@ abstract class AbstractType implements ColumnTypeInterface
      *
      * @return  self
      */
-    public function setOwner(RowHandler $owner)
+    public function setOwner(HandlerInterface $owner)
     {
         $this->owner = $owner;
 

@@ -4,6 +4,7 @@ namespace Azuracom\SpreadsheetToObject\Spreadsheet;
 
 use Azuracom\SpreadsheetToObject\ColumnType\ColumnType;
 use Azuracom\SpreadsheetToObject\ColumnType\ColumnTypeInterface;
+use Azuracom\SpreadsheetToObject\Error\Error;
 use Azuracom\SpreadsheetToObject\Event\Events;
 use Azuracom\SpreadsheetToObject\Event\PostSetValueEvent;
 use Azuracom\SpreadsheetToObject\Event\PostSetValuesEvent;
@@ -17,8 +18,10 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class RowHandler implements \Iterator, RowHandlerInterface
+class Handler implements \Iterator, HandlerInterface
 {
+    const NOT_EDITABLE_CODE = 13;
+
     /** @var  ColumnTypeInterface[] */
     protected $columnTypes = [];
 
@@ -41,6 +44,12 @@ class RowHandler implements \Iterator, RowHandlerInterface
 
     protected $currentKey = 'default';
 
+    /** @var Error[] */
+    protected $errors;
+
+    /** @var array */
+    protected $changes;
+
     public function __construct(
         ColumnTypeRegistry $registry,
         ValidatorInterface $validator,
@@ -53,53 +62,96 @@ class RowHandler implements \Iterator, RowHandlerInterface
         $this->translator = $translator;
     }
 
-    public function add(string $name, ?string $type = null, array $options = [])
+    public function add(string $name, ?string $type = null, array $options = []): HandlerInterface
     {
-        $column = self::int2ExcelColumn($this->lastColumnIndex);
         $type = $type == null ? ColumnType::class : $type;
-        $options['key'] = isset($options['key']) ? $options['key'] : $this->currentKey;
 
+        /** @var ColumnTypeInterface */
         $child = clone $this->registry->getType($type);
-        $child->init($column, $name, $options);
         $child->setOwner($this);
+        $child->init($name, $options);
 
         $this->columnTypes[] = $child;
-        $this->lastColumnIndex++;
 
         return $this;
     }
 
-    public function addEventListener(string $eventName, callable $listener, int $priority = 0)
+    public function getDefaultColumn(): string
+    {
+        $column = self::int2ExcelColumn($this->lastColumnIndex);
+        $this->lastColumnIndex++;
+
+        return $column;
+    }
+
+    public function addEventListener(string $eventName, callable $listener, int $priority = 0): HandlerInterface
     {
         $this->dispatcher->addListener($eventName, $listener, $priority);
 
         return $this;
     }
 
-    public function setRowValues(Row $row)
+    public function setValues($worksheetOrRow, ?string $key = null): HandlerInterface
     {
-        $this->currentRow = $row->getRowIndex();
+        if (!$worksheetOrRow instanceof Row && !$worksheetOrRow instanceof Worksheet) {
+            throw new \Exception(sprintf("Param worksheetOrRow should be instance of %s or %s", Row::class, Worksheet::class));
+        }
 
-        foreach ($row->getCellIterator('A', $this->getLastColumn()) as $column => $cell) {
-            $type = $this->getByColumn($column);
+        if ($worksheetOrRow instanceof Row) {
+            $this->currentRow = $worksheetOrRow->getRowIndex();
+            /** @var Worksheet */
+            $worksheet = $worksheetOrRow->getWorksheet();
+        } else {
+            /** @var Worksheet */
+            $worksheet = $worksheetOrRow;
+        }
+
+        $key = $key ?? $this->getCurrentKey();
+
+        foreach ($this->columnTypes as $type) {
+            if ($type->getOption('key') !== $key) {
+                continue;
+            }
+
+            $coordinate = $type->getColumn() . $this->getTypeRow($type);
+            $cell = $worksheet->getCell($coordinate);
+
             $type->setValue($cell->getValue());
         }
+
+        return $this;
     }
 
-    public function setSheetHeader(Worksheet $sheet, int $rowNumber = 1)
+    public function getTypeRow(ColumnTypeInterface $type)
+    {
+        return $type->getOption('row') ? $type->getOption('row') : $this->currentRow;
+    }
+
+
+    public function setSheetHeader(Worksheet $sheet, int $rowNumber = 1): HandlerInterface
     {
         foreach ($this->columnTypes as $type) {
             $sheet->setCellValue($type->getColumn() . $rowNumber,  $type->getLabel());
         }
+
+        return $this;
     }
 
-    public function setSheetRowContent(Worksheet $sheet, int $rowNumber, $data, string $key = 'default')
+    public function setSheetRowContent(Worksheet $sheet, $data, ?int $rowNumber = null, ?string $key = null): HandlerInterface
     {
+        if ($rowNumber) {
+            $this->currentRow = $rowNumber;
+        }
+
+        $key = $key ?? $this->getCurrentKey();
+
         foreach ($this->columnTypes as $type) {
             if ($type->isDataMapped($data, $key)) {
-                $sheet->setCellValue($type->getColumn() . $rowNumber, $type->getDataValue($data));
+                $sheet->setCellValue($type->getColumn() . $this->getTypeRow($type), $type->getDataValue($data));
             }
         }
+
+        return $this;
     }
 
     public static function int2ExcelColumn($num)
@@ -115,8 +167,9 @@ class RowHandler implements \Iterator, RowHandlerInterface
     }
 
 
-    public function get(string $name, string $key = 'default'): ?ColumnTypeInterface
+    public function get(string $name, ?string $key = null): ?ColumnTypeInterface
     {
+        $key = $key ?? $this->getCurrentKey();
         foreach ($this->columnTypes as $child) {
             if ($name === $child->getName() && $child->getOption('key') === $key) {
                 return $child;
@@ -126,21 +179,11 @@ class RowHandler implements \Iterator, RowHandlerInterface
         return null;
     }
 
-    public function getByColumn($column)
+    public function setDataValues($data, ?array $validationGroups = null, ?string $key = null): HandlerInterface
     {
-        foreach ($this->columnTypes as $child) {
-            if ($column === $child->getColumn()) {
-                return $child;
-            }
-        }
-
-        return null;
-    }
-
-    public function setDataValues($data, ?array $validationGroups = null, $key = 'default')
-    {
-        $errors = [];
-        $changes = [];
+        $key = $key ?? $this->getCurrentKey();
+        $this->errors = [];
+        $this->changes = [];
 
         if ($this->dispatcher->hasListeners(Events::PRE_SET_VALUES)) {
             $event = new PreSetValuesEvent($this, $data);
@@ -172,24 +215,31 @@ class RowHandler implements \Iterator, RowHandlerInterface
                         $oldStringValue = $type->getDataValue($data, true);
                         $newStringValue = $type->getValue(null);
 
-                        $changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
+                        $this->changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
                         $type->setDataValue($data, $newValue);
 
                         //validate conf contraints
                         $valueErrors = $this->validator->validate($newValue, $type->getOption('constraints'));
                         foreach ($valueErrors as $error) {
-                            $errors[] = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                                '%row%' => $this->currentRow,
+                            $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
+                                '%row%' => $this->getTypeRow($type),
                                 '%column%' => $type->getColumn(),
                                 '%error%' => $error->getMessage()
                             ]);
+                            
+                            $this->errors[] = new Error($message,$error->getCode());
+
                         }
+
                     } else {
-                        $errors[] = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.value_not_editable", [
-                            '%row%' => $this->currentRow,
+                        $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.value_not_editable", [
+                            '%row%' => $this->getTypeRow($type),
                             '%column%' => $type->getColumn(),
                         ]);
+
+                        $this->errors[] = new Error($message,self::NOT_EDITABLE_CODE);
                     }
+
                 }
             } catch (\Exception $e) {
                 //transformation exception try to translate error
@@ -197,11 +247,13 @@ class RowHandler implements \Iterator, RowHandlerInterface
                     $this->translator->trans($e->getMessage(), $e->getInvalidMessageParameters()) :
                     $e->getMessage();
 
-                $errors[] = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                    '%row%' => $this->currentRow,
+                $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
+                    '%row%' => $this->getTypeRow($type),
                     '%column%' => $type->getColumn(),
                     '%error%' => $error
                 ]);
+
+                $this->errors[] = new Error($message, $type->getOption('transformation_error_code'));
             }
 
             if ($this->dispatcher->hasListeners(Events::POST_SET_VALUE)) {
@@ -226,7 +278,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
                 $errorMatchPath = $type->getOption('error_match_path');
                 if ($type->getName() == $name || ($errorMatchPath && preg_match("#$errorMatchPath#", $name))) {
                     $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                        '%row%' => $this->currentRow,
+                        '%row%' => $this->getTypeRow($type),
                         '%column%' => $type->getColumn(),
                         '%error%' =>  $error->getMessage()
                     ]);
@@ -240,26 +292,17 @@ class RowHandler implements \Iterator, RowHandlerInterface
                     '%error%' =>  $error->getMessage()
                 ]);
             }
-            $errors[] = $message;
+
+            $this->errors[] = new Error($message,$error->getCode());
         }
 
-        return [
-            'errors' => $errors,
-            'changes' => $changes
-        ];
+        return $this;
     }
 
     public function getColumnTypes(): array
     {
         return $this->columnTypes;
     }
-
-    public function getLastColumn()
-    {
-        $key = array_key_last($this->columnTypes);
-        return $this->columnTypes[$key]->getColumn();
-    }
-
 
     //iterator stuff
     public function rewind()
@@ -290,7 +333,7 @@ class RowHandler implements \Iterator, RowHandlerInterface
     /**
      * Get the value of currentKey
      */
-    public function getCurrentKey()
+    public function getCurrentKey(): string
     {
         return $this->currentKey;
     }
@@ -300,10 +343,36 @@ class RowHandler implements \Iterator, RowHandlerInterface
      *
      * @return  self
      */
-    public function setCurrentKey($currentKey)
+    public function setCurrentKey(string $currentKey): HandlerInterface
     {
         $this->currentKey = $currentKey;
 
         return $this;
+    }
+
+    /**
+     * Get the value of errors
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
+
+    /**
+     * Get the value of changes
+     */
+    public function getChanges(): array
+    {
+        return $this->changes;
+    }
+
+    public function hasError(): bool
+    {
+        return count($this->errors) > 0;
+    }
+
+    public function hasChanged(): bool
+    {
+        return count($this->changes) > 0;
     }
 }

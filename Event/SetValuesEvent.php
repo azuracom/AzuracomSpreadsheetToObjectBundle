@@ -2,28 +2,28 @@
 
 namespace Azuracom\SpreadsheetToObject\Event;
 
-use Azuracom\SpreadsheetToObject\Spreadsheet\RowHandler;
+use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class SetValuesEvent extends Event
 {
     protected $data;
 
-    /** @var RowHandler */
-    private $rowHandler;
+    /** @var HandlerInterface */
+    private $handler;
 
-    public function __construct(RowHandler $rowHandler,$data)
+    public function __construct(HandlerInterface $handler,$data)
     {
-        $this->rowHandler = $rowHandler;
+        $this->handler = $handler;
         $this->data = $data;
     }
 
     /**
-     * Get the value of rowHandler
+     * Get the value of Handler
      */ 
-    public function getRowHandler() : RowHandler
+    public function getHandler() : HandlerInterface
     {
-        return $this->rowHandler;
+        return $this->handler;
     }
 
     /**

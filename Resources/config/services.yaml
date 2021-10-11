@@ -6,7 +6,7 @@ services:
         public: true
 
     azuracom.spresheet_to_object.row_handler:
-        class: Azuracom\SpreadsheetToObject\Spreadsheet\RowHandler
+        class: Azuracom\SpreadsheetToObject\Spreadsheet\Handler
 
     azuracom.spresheet_to_object.column_type_registry:
         class: Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry   
@@ -16,5 +16,5 @@ services:
         tags: ['azuracom_spresheet_to_object.column_type']    
 
     #aliases
-    Azuracom\SpreadsheetToObject\Spreadsheet\RowHandlerInterface: '@azuracom.spresheet_to_object.row_handler'
+    Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface: '@azuracom.spresheet_to_object.row_handler'
     Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry: '@azuracom.spresheet_to_object.column_type_registry'
