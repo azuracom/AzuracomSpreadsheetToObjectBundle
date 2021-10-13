@@ -5,8 +5,8 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         public: true
 
-    azuracom.spresheet_to_object.row_handler:
-        class: Azuracom\SpreadsheetToObject\Spreadsheet\Handler
+    azuracom.spresheet_to_object.factory.handler:
+        class: Azuracom\SpreadsheetToObject\Factory\HandlerFactory
 
     azuracom.spresheet_to_object.column_type_registry:
         class: Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry   
@@ -16,5 +16,5 @@ services:
         tags: ['azuracom_spresheet_to_object.column_type']    
 
     #aliases
-    Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface: '@azuracom.spresheet_to_object.row_handler'
+    Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface: '@azuracom.spresheet_to_object.factory.handler'
     Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry: '@azuracom.spresheet_to_object.column_type_registry'

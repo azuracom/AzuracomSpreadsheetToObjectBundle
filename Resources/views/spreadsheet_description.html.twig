@@ -1,0 +1,47 @@
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Cible</th>
+            <th>Type</th>
+            <th>Valeur par défaut</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for columnType in handler %}
+            <tr>
+                <td>{{ columnType.column }}</td>
+                <td>{{ columnType.option('key') }}</td>
+                <td>{{ columnType.prefix }}</td>
+                <td>
+                    {% set emptyData = columnType.getOption('empty_data') %}
+                    {% if emptyData is null %}
+                        -
+                    {% elseif emptyData == false %}
+                        0
+                    {% else %}
+                        {{ emptyData }}
+                    {% endif %}
+                </td>
+                <td>
+                    {{ columnType.label }}   
+                    {% if columnType.prefix == 'choice' %}
+                        <br/>Choix possibles: {{ columnType.option('choices')|keys|join(', ') }}
+                    {% endif %}
+                    {% if columnType.option('help') %}
+                        {% if not columnType.option('help_is_html') %}
+                            <span class="help-block">
+                                <span class="glyphicon glyphicon-info-sign"></span>
+                                
+                                {{ columnType.option('help') }}
+                            </span>
+                        {% else %}
+                            {{ columnType.option('help')|raw }}
+                        {% endif %}                        
+                    {% endif %}                    
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

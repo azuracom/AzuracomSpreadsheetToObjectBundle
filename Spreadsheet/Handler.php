@@ -131,7 +131,7 @@ class Handler implements \Iterator, HandlerInterface
     public function setSheetHeader(Worksheet $sheet, int $rowNumber = 1): HandlerInterface
     {
         foreach ($this->columnTypes as $type) {
-            $sheet->setCellValue($type->getColumn() . $rowNumber,  $type->getLabel());
+            $sheet->setCellValue($type->getColumn() . $rowNumber,  $this->translator->trans($type->getLabel()));
         }
 
         return $this;
