@@ -382,6 +382,10 @@ abstract class AbstractType implements ColumnTypeInterface
             return true;
         }
 
+        if($newValue === null && $oldValue === null){
+            return false;
+        }
+
         return $this->hasChangedInner($newValue, $oldValue);
     }
 
