@@ -223,6 +223,7 @@ use App\Entity\Seller;
 use Azuracom\SpreadsheetToObject\ColumnType\ColumnTypeInterface;
 use Azuracom\SpreadsheetToObject\ColumnType\MoneyType;
 use Azuracom\SpreadsheetToObject\ColumnType\TextType;
+use Azuracom\SpreadsheetToObject\ColumnType\EntityType;
 use Azuracom\SpreadsheetToObject\DataTransformer\EntityTransformer;
 use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -275,15 +276,33 @@ class ProductImportHandlerBuilder
                 'label' => 'Description',
                 'help' => $this->twig->render('path/to/template.html.twig', ['param' => 'paramvalue']),
                 'help_is_html' => true,
-            ])
-            ->add('seller', TextType::class);
+            ]);
 
 
-        $handler->get('seller')->addTransformer(new EntityTransformer(
-            $this->em->getRepository(Seller::class), //repo
-            'code', //property used to match value in cell
-            'findEnabled' // method used to retrieve all elements
-        ));
+        $handler->add('seller', EntityType::class,[
+                'class' => Seller::class,
+                'property' => 'code',
+
+                //define method to retrieve object
+                'find_method' => 'findBy' //default value is findAll,
+                'find_arguments' => [['code'=> $sellerCodes]] //for instance fetch only seller where codes are presents in current file
+
+                //Sample with more advanced usage
+                'property' => function($seller) { //function recieve entity as first arguments
+                    return $seller->getCode() .'-' . $seller->getCountryCode();
+                },
+                'find_callback' => function($value,EntityRepository $repository) { //function recieve cell content as first arguments and repository as second
+                    //your own logic
+                    $explode = explode('-');
+                    $code = $explode[0];
+                    $countryCode = $explode[1];
+
+                    return $repository->findOneBy([
+                        'code' => $code,
+                        'countryCode' => $countryCode,
+                    ]);
+                }
+            ]);
 
         return $handler;
     }
