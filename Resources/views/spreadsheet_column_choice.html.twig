@@ -1,0 +1,106 @@
+<div class="d-flex align-items-stretch flex-row">
+	{% set columnIndex = 0 %}
+	<ul id="column_index" class="list-group" style="flex: 0 0 40px;">
+		{% for field in form %}
+            {% if field.vars.block_prefixes.1 == 'export_column_checkbox' %}
+			    <li class="list-group-item p-1">{{ columnIndex|int_to_excel_column }}</li>
+			    {% set columnIndex = columnIndex +1 %}
+            {% endif %}
+		{% endfor %}
+	</ul>
+	<ul id="column_selected" class="list-group" style="flex: auto;">
+	</ul>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+
+        initSelected();
+        
+        //check / uncheck column
+        $('.input-selected-wrapper input').change(function(){
+            var input = $(this);
+            var block = input.closest('.export-column-checkbox-wrapper');
+            var data = getColumnData(block);
+            input.prop('checked') ? addColumn(data) : removeColumn(data);
+
+            reindexSortable();
+        });
+        
+        //remove column selected with button
+        $('#column_selected').on('click','.remove-column',function(e){
+            e.preventDefault();
+            
+            var id = $(this).closest('.column').attr('data-id');
+            var input = $('#' + id + ' .input-selected-wrapper input')
+            
+            input.prop('checked',false);
+            input.trigger('change');				
+        });
+        
+        
+        //======== set column sortable
+        $( "#column_selected" ).sortable({
+            placeholder: 'list-group-item p-2 list-group-item-secondary',
+            stop: function(event, ui){
+                reindexSortable();
+            }
+        });
+    
+        $( "#column_selected").disableSelection();
+
+    });
+
+    var elementHTML = "<li class='list-group-item p-1 position-relative column' data-id='__id__' ><span class='label-content'>__label__</span><button class='btn btn-default btn-sm position-absolute remove-column' style='top:0;right:0' type='button'>x</button></li>";
+
+    function addColumn(data)
+    {			
+        $('#column_selected').append(elementHTML.replace('__id__',data.id).replace('__label__',data.label));
+    }
+
+    function removeColumn(data)
+    {
+        $('.column[data-id="' + data.id + '"]').remove();
+    }
+
+    function reindexSortable()
+    {
+        var i=0;
+        $('.input-column-wrapper input').val("");
+        
+        $('.column').each(function(){
+            var letter = $('#column_index').children().eq(i).html();
+            var id = $(this).attr('data-id');
+            $('#'+id + ' .input-column-wrapper input').val(letter);				
+            i++;
+        });
+    }
+
+
+    function initSelected()
+    {
+        var items = [];
+        $('.export-column-checkbox-wrapper [type=checkbox]:checked').each(function() {
+            var block = $(this).closest('.export-column-checkbox-wrapper');
+            items.push(getColumnData(block));
+        });	
+
+        items.sort(function(a,b){
+            return a.letter > b.letter; 
+        });
+
+        items.forEach(function( item ){
+            addColumn(item);
+        })
+    }
+
+    function getColumnData(block)
+    {
+        return {
+            id: block.attr('id'),
+            label: block.find('label').html(),
+            letter: block.find('.input-column-wrapper input').val() 
+        }
+    }
+    
+</script>

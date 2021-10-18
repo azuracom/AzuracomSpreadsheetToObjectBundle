@@ -1,0 +1,8 @@
+{% block export_column_checkbox_row %}
+	<div class="export-column-checkbox-wrapper" id="{{ form.vars.id }}">
+		{{ form_row(form.selected,{row_attr:{class: 'input-selected-wrapper'}}) }}
+        <div class="input-column-wrapper">
+            {{ form_widget(form.column) }}
+        </div>
+	</div>
+{% endblock %}

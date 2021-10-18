@@ -209,6 +209,128 @@ class ProductController extends AbstractController
 }
 ```
 
+## Use as export with user choice column
+
+1. Create controller
+
+```php
+<?php
+
+namespace App\Controller;
+
+use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
+use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnCheckboxType;
+use Azuracom\SpreadsheetToObject\ColumnType\TextType;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class ProductController extends AbstractController
+{
+    #[Route('/export', name: 'order_export')]
+    public function export(Request $request, HandlerFactoryInterface $factory)
+    {
+        //create form (should be defined in custom file)
+        $form = $this->createFormBuilder()
+            ->add('firstname', ExportColumnCheckboxType::class, [
+                //column stuff configuration
+                'column_name' => '[firstname]', //propertyAccessor format
+                'column_type' => TextType::class, //default value
+                'column_options' => [
+                    //check column type to retrieve available options
+                    'empty_data' => 'Indéfini' //value returned when data is null
+                ]
+                'label' => 'Prénom', //will override column_options.label and be used to set file header
+            ])
+            ->add('lastname', ExportColumnCheckboxType::class, [
+                'column_name' => '[lastname]',
+                'label' => 'Nom',
+            ])
+            ->getForm();
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            
+            //use form to create handler,only selected column will be added to the handler
+            $handler = $factory->createFromForm($form);
+
+            //sample with array data
+            $customers =[
+                ['firstname' => 'John','lastname' => 'Doe'],
+                ['firstname' => 'Jane','lastname' => 'Doe'],
+            ];
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $handler->setSheetHeader($sheet);
+            $rowNumber = 2;
+            foreach ($customers as $customer) {
+                $handler->setSheetRowContent($sheet, $customer, $rowNumber);
+                $rowNumber++;
+            }
+
+            $writer = new Xlsx($spreadsheet);
+            ob_start();
+            $writer->save('php://output');
+            $content = ob_get_clean();
+
+            $response = new Response($content);
+            $response->headers->add([
+                'Content-Type' => 'application/vnd.ms-excel; charset=utf-8',
+                'Content-Disposition' => 'attachment; filename="export.xlsx"'
+            ]);
+
+            return $response;
+        }
+
+        return $this->render('product/export.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+}
+```
+
+2. Add form theme
+
+```yaml
+#config/packages/twig.yaml
+twig:
+    form_themes:
+        - '@AzuracomSpreadsheetToObject/form.html.twig' 
+```
+
+3. Create the view
+
+```html
+{# template/product/export.html.twig #}
+{# layout should have both jquery and jquery ui scripts ! #}
+
+{% extends "layout.html.twig" %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                {{ form_start(form) }}
+                {{ form_rest(form) }}
+                <button class="btn btn-primary">
+                    Upload
+                </button>
+                {{ form_end(form) }}
+            </div>
+            <div class="col-md-6">
+                {% include "@AzuracomSpreadsheetToObject/spreadsheet_column_choice.html.twig" with {form: form} %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+```
+
+
+
+
 ## Use as Import
 
 1. Create a builder

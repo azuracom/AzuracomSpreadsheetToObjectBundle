@@ -13,7 +13,11 @@ services:
 
     Azuracom\SpreadsheetToObject\ColumnType\:
         resource: '../../ColumnType'
-        tags: ['azuracom_spresheet_to_object.column_type']    
+        tags: ['azuracom_spresheet_to_object.column_type']   
+
+    Azuracom\SpreadsheetToObject\Twig\:
+        resource: '../../Twig'
+        tags: ['twig.extension']            
 
     #aliases
     Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface: '@azuracom.spresheet_to_object.factory.handler'

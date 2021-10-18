@@ -2,12 +2,14 @@
 
 namespace Azuracom\SpreadsheetToObject\Factory;
 
+use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnCheckboxType;
 use Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry;
 use Azuracom\SpreadsheetToObject\Spreadsheet\Handler;
 use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Form\FormInterface;
 
 class HandlerFactory implements HandlerFactoryInterface
 {
@@ -46,6 +48,28 @@ class HandlerFactory implements HandlerFactoryInterface
             $this->dispatcher,
             $this->translator
         );
+
+        return $handler;
+    }
+
+    public function createFromForm(FormInterface $form): HandlerInterface
+    {
+        $handler = $this->create();
+
+        foreach ($form->all() as $field) {
+            if ($field->getConfig()->getType()->getInnerType() instanceof ExportColumnCheckboxType && $field->get('selected')->getData()) {
+
+                $column = $field->get('column')->getData();
+                $fieldOptions = $field->getConfig()->getOptions();
+                $options = $fieldOptions['column_options'];
+                $options['label'] = $fieldOptions['label'];
+                $options['column'] = $column;
+                $name = $fieldOptions['column_name'];
+                $type = $fieldOptions['column_type'];
+
+                $handler->add($name, $type, $options);
+            }
+        }
 
         return $handler;
     }
