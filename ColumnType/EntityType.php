@@ -23,13 +23,14 @@ class EntityType extends AbstractType
         $resolver->setDefaults([
             'find_callback' => null,
             'find_method' => 'findAll',
-            'find_arguments' => []
+            'find_arguments' => [],
+            'poperty' => null,
         ]);
 
         $resolver->setRequired(['class']);
         $resolver->setAllowedTypes('class', 'string');
         $resolver->setAllowedTypes('find_method', 'string');
-        $resolver->setAllowedTypes('property', ['string','callable']);
+        $resolver->setAllowedTypes('property', ['string','callable','null']);
         $resolver->setAllowedTypes('find_callback', ['null', 'callable']);
         $resolver->setAllowedTypes('find_arguments','array');
     }
