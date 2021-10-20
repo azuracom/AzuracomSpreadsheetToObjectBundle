@@ -226,20 +226,17 @@ class Handler implements \Iterator, HandlerInterface
                                 '%column%' => $type->getColumn(),
                                 '%error%' => $error->getMessage()
                             ]);
-                            
-                            $this->errors[] = new Error($message,$error->getCode());
 
+                            $this->errors[] = new Error($message, $error->getCode());
                         }
-
                     } else {
                         $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.value_not_editable", [
                             '%row%' => $this->getTypeRow($type),
                             '%column%' => $type->getColumn(),
                         ]);
 
-                        $this->errors[] = new Error($message,self::NOT_EDITABLE_CODE);
+                        $this->errors[] = new Error($message, self::NOT_EDITABLE_CODE);
                     }
-
                 }
             } catch (\Exception $e) {
                 //transformation exception try to translate error
@@ -293,7 +290,7 @@ class Handler implements \Iterator, HandlerInterface
                 ]);
             }
 
-            $this->errors[] = new Error($message,$error->getCode());
+            $this->errors[] = new Error($message, $error->getCode());
         }
 
         return $this;
@@ -374,5 +371,16 @@ class Handler implements \Iterator, HandlerInterface
     public function hasChanged(): bool
     {
         return count($this->changes) > 0;
+    }
+
+    public function hasKey($key): bool
+    {
+        foreach ($this->columnTypes as $type) {
+            if ($type->getOption('key') === $key) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

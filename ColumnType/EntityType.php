@@ -26,7 +26,7 @@ class EntityType extends AbstractType
             'find_arguments' => []
         ]);
 
-        $resolver->setRequired(['class', 'property']);
+        $resolver->setRequired(['class']);
         $resolver->setAllowedTypes('class', 'string');
         $resolver->setAllowedTypes('find_method', 'string');
         $resolver->setAllowedTypes('property', ['string','callable']);

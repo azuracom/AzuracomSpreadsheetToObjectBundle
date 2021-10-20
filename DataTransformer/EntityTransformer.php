@@ -22,10 +22,10 @@ class EntityTransformer implements DataTransformerInterface
 
     public function __construct(
         EntityRepository $repository,
-        $property,
+        $property = null,
         ?callable $findCallback = null,
-        string $findMethod,
-        array $findArguments
+        ?string $findMethod ='findAll',
+        array $findArguments = []
     ) {
         $this->repository = $repository;
         $this->property = $property;

@@ -1,12 +1,8 @@
 <div class="d-flex align-items-stretch flex-row">
-	{% set columnIndex = 0 %}
 	<ul id="column_index" class="list-group" style="flex: 0 0 40px;">
-		{% for field in form %}
-            {% if field.vars.block_prefixes.1 == 'export_column_checkbox' %}
-			    <li class="list-group-item p-1">{{ columnIndex|int_to_excel_column }}</li>
-			    {% set columnIndex = columnIndex +1 %}
-            {% endif %}
-		{% endfor %}
+        {% for column in getColumnFromForm(form)%}
+            <li class="list-group-item p-1">{{ column }}</li>
+        {% endfor %}
 	</ul>
 	<ul id="column_selected" class="list-group" style="flex: auto;">
 	</ul>
@@ -17,12 +13,34 @@
 
         initSelected();
         
+
+        $('.export-column-all-checkbox').change(function(){
+            var input = $(this);
+            $('.input-selected-wrapper input').each(function(){
+                $(this).prop('checked',input.prop('checked'));
+                $(this).trigger('change');
+            });
+        });
+
+        $('.export-column-group-checkbox').change(function(){
+            var block = $(this).closest('.export-column-group-wrapper');
+            var input = $(this);
+            block.find('.input-selected-wrapper input').each(function(){
+                $(this).prop('checked',input.prop('checked'));
+                $(this).trigger('change');
+            });
+        });
+
         //check / uncheck column
         $('.input-selected-wrapper input').change(function(){
             var input = $(this);
             var block = input.closest('.export-column-checkbox-wrapper');
             var data = getColumnData(block);
             input.prop('checked') ? addColumn(data) : removeColumn(data);
+
+            if(!input.prop('checked') && input.closest('.export-column-group-wrapper').length){
+                input.closest('.export-column-group-wrapper').find('.input-group-check:first').prop('checked',false);
+            }
 
             reindexSortable();
         });
@@ -54,8 +72,11 @@
     var elementHTML = "<li class='list-group-item p-1 position-relative column' data-id='__id__' ><span class='label-content'>__label__</span><button class='btn btn-default btn-sm position-absolute remove-column' style='top:0;right:0' type='button'>x</button></li>";
 
     function addColumn(data)
-    {			
-        $('#column_selected').append(elementHTML.replace('__id__',data.id).replace('__label__',data.label));
+    {	
+        if($('#column_selected [data-id=' + data.id + ']').length === 0){
+            $('#column_selected').append(elementHTML.replace('__id__',data.id).replace('__label__',data.label));
+
+        }		
     }
 
     function removeColumn(data)

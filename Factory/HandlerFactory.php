@@ -55,8 +55,17 @@ class HandlerFactory implements HandlerFactoryInterface
     public function createFromForm(FormInterface $form): HandlerInterface
     {
         $handler = $this->create();
+        $this->iterateOnFormR($form, $handler);
+        return $handler;
+    }
 
+    private function iterateOnFormR(FormInterface $form, HandlerInterface $handler)
+    {
         foreach ($form->all() as $field) {
+            if ($field->count()) {
+                $this->iterateOnFormR($field, $handler);
+            }
+
             if ($field->getConfig()->getType()->getInnerType() instanceof ExportColumnCheckboxType && $field->get('selected')->getData()) {
 
                 $column = $field->get('column')->getData();
@@ -64,13 +73,12 @@ class HandlerFactory implements HandlerFactoryInterface
                 $options = $fieldOptions['column_options'];
                 $options['label'] = $fieldOptions['label'];
                 $options['column'] = $column;
-                $name = $fieldOptions['column_name'];
+                $options['key'] = isset($options['key']) ? $options['key'] : $fieldOptions['column_key'];
+                $name = $fieldOptions['column_name'] ? $fieldOptions['column_name'] : $field->getName();
                 $type = $fieldOptions['column_type'];
 
                 $handler->add($name, $type, $options);
             }
         }
-
-        return $handler;
     }
 }

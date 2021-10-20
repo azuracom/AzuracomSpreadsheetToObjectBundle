@@ -21,4 +21,5 @@ interface HandlerInterface
     public function getChanges(): array;
     public function hasError(): bool;
     public function hasChanged(): bool;
+    public function hasKey($key): bool;
 }

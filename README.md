@@ -242,7 +242,7 @@ class ProductController extends AbstractController
                 'column_options' => [
                     //check column type to retrieve available options
                     'empty_data' => 'Indéfini' //value returned when data is null
-                ]
+                ],
                 'label' => 'Prénom', //will override column_options.label and be used to set file header
             ])
             ->add('lastname', ExportColumnCheckboxType::class, [

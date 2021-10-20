@@ -29,11 +29,12 @@ class ExportColumnCheckboxType extends AbstractType
         $resolver->setDefaults([
             'column_type' => TextType::class,
             'column_options' => [],
+            'column_key' => null,
+            'column_name' => null,
         ]);
-
-        $resolver->setRequired(['column_name']);
         $resolver->setAllowedTypes('column_type', 'string');
-        $resolver->setAllowedTypes('column_name', 'string');
+        $resolver->setAllowedTypes('column_name', ['string', 'null']);
         $resolver->setAllowedTypes('column_options', 'array');
+        $resolver->setAllowedTypes('column_key', ['string', 'null']);
     }
 }

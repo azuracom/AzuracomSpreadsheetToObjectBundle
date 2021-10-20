@@ -17,7 +17,11 @@ services:
 
     Azuracom\SpreadsheetToObject\Twig\:
         resource: '../../Twig'
-        tags: ['twig.extension']            
+        tags: ['twig.extension']  
+        
+    Azuracom\SpreadsheetToObject\Form\:
+        resource: '../../Form'
+        tags: ['form.type']           
 
     #aliases
     Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface: '@azuracom.spresheet_to_object.factory.handler'

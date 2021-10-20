@@ -1,8 +1,20 @@
 {% block export_column_checkbox_row %}
 	<div class="export-column-checkbox-wrapper" id="{{ form.vars.id }}">
 		{{ form_row(form.selected,{row_attr:{class: 'input-selected-wrapper'}}) }}
-        <div class="input-column-wrapper">
-            {{ form_widget(form.column) }}
-        </div>
+		<div class="input-column-wrapper">
+			{{ form_widget(form.column) }}
+		</div>
+	</div>
+{% endblock %}
+
+
+{% block export_column_group_row %}
+	<div class="export-column-group-wrapper" id="{{ form.vars.id }}">
+		{{ form_widget(form.check,{attr:{class:'export-column-group-checkbox'}}) }}
+		<ul class="export-column-group-children list-unstyled ps-4">
+			{% for field in form.children %}
+				<li>{{ form_row(field) }}</li>
+			{% endfor %}
+		</ul>
 	</div>
 {% endblock %}
