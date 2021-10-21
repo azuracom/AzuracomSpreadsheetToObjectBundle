@@ -162,7 +162,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class ProductController extends AbstractController
+class OrderController extends AbstractController
 {
     #[Route('/export', name: 'order_export')]
     public function export(OrderExportHandlerBuilder $builder)
@@ -179,14 +179,12 @@ class ProductController extends AbstractController
         $orders = $this->getDoctrine()->getRepository(Oder::class)->findAll();
         $rowNumber = 2;
         foreach($orders as $order){
-            //set values to column mapped to "order" key
-            $spreadsheetHandler
-                ->setCurrentKey('order')
-                ->setSheetRowContent($sheet,$order,$rowNumber);
-
             foreach($order->getItems() as $item){
-                //set values to column mapped to "order" key
                 $spreadsheetHandler
+                    //set values to column mapped to "order" key
+                    ->setCurrentKey('order')
+                    ->setSheetRowContent($sheet,$order,$rowNumber)
+                    //set values to column mapped to "order_item" key
                     ->setCurrentKey('order_item')
                     ->setSheetRowContent($sheet,$item,$rowNumber);
                 $rowNumber ++;
@@ -211,16 +209,93 @@ class ProductController extends AbstractController
 
 ## Use as export with user choice column
 
-1. Create controller
+1. Create forms type
+
+```php
+<?php
+//src/Form/Filter/ExportCustomerColumFilter.php
+
+namespace App\Form\Filter;
+
+use Azuracom\SpreadsheetToObject\ColumnType\TextType;
+use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnCheckboxType;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+class ExportCustomerColumFilter extends AbstractType
+{
+        $builder
+            ->add('firstname', ExportColumnCheckboxType::class, [
+                'label' => 'Prénom', //will override column_options.label and be used to set file header
+                //column stuff configuration
+                'column_name' => '[firstname]', //not mandatory if equal to form name, NB this notation is used because customer data is an array and not an entity
+                'column_type' => TextType::class, //default value
+                'column_options' => [
+                    //check column type to retrieve available options
+                    'empty_data' => 'Indéfini', //value returned when data is null
+                ],
+                'column_key' => $options['column_key'], //get column key used by the parent
+            ])
+            ->add('lastname', ExportColumnCheckboxType::class, [                
+                'label' => 'Nom',
+                'column_name' => '[lastname]',
+                'column_key' => $options['column_key'], 
+            ]);
+    }
+
+    //Don't forget to add this to set column key using a parent ExportColumnGroupType
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefault('column_key',null);
+    }
+}
+
+//src/Form/Filter/ExportCustomerAddressColumFilter.php
+
+namespace App\Form\Filter;
+
+use Azuracom\SpreadsheetToObject\ColumnType\TextType;
+use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnCheckboxType;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+class ExportCustomerAddressColumFilter extends AbstractType
+{
+        $builder
+            ->add('street', ExportColumnCheckboxType::class, [
+                'column_name' => '[street]',
+                'label' => 'Rue', 
+                'column_key' => $options['column_key'], 
+            ])
+            ->add('city', ExportColumnCheckboxType::class, [                
+                'label' => 'Ville',
+                'column_name' => '[city]',
+                'column_key' => $options['column_key'], 
+            ]);
+    }
+
+    //Don't forget to add this to set column key using a parent ExportColumnGroupType
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefault('column_key',null);
+    }
+}
+
+```
+
+
+2. Create controller
 
 ```php
 <?php
 
 namespace App\Controller;
 
+use App\Form\Filter\ExportCustomerColumFilter;
 use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
-use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnCheckboxType;
-use Azuracom\SpreadsheetToObject\ColumnType\TextType;
+use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnGroupType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\Routing\Annotation\Route;
@@ -233,21 +308,16 @@ class ProductController extends AbstractController
     #[Route('/export', name: 'order_export')]
     public function export(Request $request, HandlerFactoryInterface $factory)
     {
-        //create form (should be defined in custom file)
         $form = $this->createFormBuilder()
-            ->add('firstname', ExportColumnCheckboxType::class, [
-                //column stuff configuration
-                'column_name' => '[firstname]', //propertyAccessor format
-                'column_type' => TextType::class, //default value
-                'column_options' => [
-                    //check column type to retrieve available options
-                    'empty_data' => 'Indéfini' //value returned when data is null
-                ],
-                'label' => 'Prénom', //will override column_options.label and be used to set file header
+            ->add('customer',ExportColumnGroupType::class,[
+                'entry_type' => ExportCustomerColumFilter::class,
+                'column_key' => 'customer', //Nb: define configureOptions with column_key !!
+                'label' => 'Info générale client' //label of check all group checkbox
             ])
-            ->add('lastname', ExportColumnCheckboxType::class, [
-                'column_name' => '[lastname]',
-                'label' => 'Nom',
+            ->add('address',ExportColumnGroupType::class,[
+                'entry_type' => ExportCustomerAddressColumFilter::class,
+                'column_key' => 'customer_address',
+                'label' => 'Info adresses client' 
             ])
             ->getForm();
         $form->handleRequest($request);
@@ -258,8 +328,19 @@ class ProductController extends AbstractController
 
             //sample with array data
             $customers =[
-                ['firstname' => 'John','lastname' => 'Doe'],
-                ['firstname' => 'Jane','lastname' => 'Doe'],
+                [
+                    'firstname' => 'John',
+                    'lastname' => 'Doe',
+                    'addresses' => [
+                        ['street' => 'Avenue de la république' , 'city' => 'Avignon'],
+                        ['street' => 'Place pie' , 'city' => 'Avignon'],
+                    ]
+                ],
+                [
+                    'firstname' => 'Jane',
+                    'lastname' => 'Doe',
+                    'addresses' => [],
+                ],
             ];
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
@@ -267,8 +348,24 @@ class ProductController extends AbstractController
             $handler->setSheetHeader($sheet);
             $rowNumber = 2;
             foreach ($customers as $customer) {
-                $handler->setSheetRowContent($sheet, $customer, $rowNumber);
-                $rowNumber++;
+                //no address, add one row with only customer info
+                if(count($address) === 0){
+                    $handler
+                        ->setCurrentKey('customer') //relative to column_key in form
+                        ->setSheetRowContent($sheet, $customer, $rowNumber);
+                    $rowNumber++;
+                }else{
+                    //one row by custumer and address
+                    foreach($customer['addresses'] as $address){
+                        $handler
+                            //write customer info
+                            ->setCurrentKey('customer') 
+                            ->setSheetRowContent($sheet, $customer, $rowNumber)
+                            ->setCurrentKey('customer_address') 
+                            ->setSheetRowContent($sheet, $address, $rowNumber);
+                        $rowNumber++;
+                    }
+                }                
             }
 
             $writer = new Xlsx($spreadsheet);
@@ -292,7 +389,7 @@ class ProductController extends AbstractController
 }
 ```
 
-2. Add form theme
+3. Add form theme
 
 ```yaml
 #config/packages/twig.yaml
@@ -301,7 +398,7 @@ twig:
         - '@AzuracomSpreadsheetToObject/form.html.twig' 
 ```
 
-3. Create the view
+4. Create the view
 
 ```html
 {# template/product/export.html.twig #}
@@ -314,9 +411,11 @@ twig:
         <div class="row">
             <div class="col-md-6">
                 {{ form_start(form) }}
+                {# add an check box with  export-column-all-checkbox to check/uncheck all elements #}
+                <input type="checkbox" class="form-check-input export-column-all-checkbox">
                 {{ form_rest(form) }}
                 <button class="btn btn-primary">
-                    Upload
+                    Download
                 </button>
                 {{ form_end(form) }}
             </div>
