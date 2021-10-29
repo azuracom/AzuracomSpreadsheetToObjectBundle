@@ -24,7 +24,7 @@ class EntityType extends AbstractType
             'find_callback' => null,
             'find_method' => 'findAll',
             'find_arguments' => [],
-            'poperty' => null,
+            'property' => null,
         ]);
 
         $resolver->setRequired(['class']);
