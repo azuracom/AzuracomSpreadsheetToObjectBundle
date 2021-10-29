@@ -16,7 +16,7 @@ class DateTimeType extends AbstractType
             'format' => 'Y-m-d H:i:s',
         ]);
 
-        $resolver->setAllowedType('format','string');
+        $resolver->setAllowedTypes('format','string');
     }
     public function getDefaultTransformer($options): ?DataTransformerInterface
     {
