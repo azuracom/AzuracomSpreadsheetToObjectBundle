@@ -90,13 +90,14 @@ abstract class AbstractType implements ColumnTypeInterface
             'empty_data' => null,
             //the key to define if an object is mapped to a column
             'key' => null,
-            
+
             'transformation_error_code' => 0,
             //cell coordinate stuff
             'row' => null,
             'column' => null,
-            'cell' => null
-
+            'cell' => null,
+            'cell_styles' => null,
+            'column_width' => null,
         ]);
 
         //validation
@@ -112,7 +113,8 @@ abstract class AbstractType implements ColumnTypeInterface
         $resolver->setAllowedTypes('column', ['null', 'string']);
         $resolver->setAllowedTypes('cell', ['null', 'string']);
         $resolver->setAllowedTypes('transformation_error_code', ['int']);
-
+        $resolver->setAllowedTypes('cell_styles', ['null', 'array', 'callable']);
+        $resolver->setAllowedTypes('column_width', ['null', 'int']);
 
         //normalize option
         $resolver->setNormalizer('setter', function (Options $options, $value) {
@@ -382,7 +384,7 @@ abstract class AbstractType implements ColumnTypeInterface
             return true;
         }
 
-        if($newValue === null && $oldValue === null){
+        if ($newValue === null && $oldValue === null) {
             return false;
         }
 

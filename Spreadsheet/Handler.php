@@ -44,6 +44,9 @@ class Handler implements \Iterator, HandlerInterface
 
     protected $currentKey = 'default';
 
+    /** @var boolean */
+    protected $columnWidthSetted = false;
+
     /** @var Error[] */
     protected $errors;
 
@@ -146,10 +149,23 @@ class Handler implements \Iterator, HandlerInterface
         $key = $key ?? $this->getCurrentKey();
 
         foreach ($this->columnTypes as $type) {
+            if (!$this->columnWidthSetted && $type->getOption('column_width')) {
+                $sheet->getColumnDimension($type->getColumn())->setWidth($type->getOption('column_width'), 'pt');
+            }
+
             if ($type->isDataMapped($data, $key)) {
-                $sheet->setCellValue($type->getColumn() . $this->getTypeRow($type), $type->getDataValue($data));
+                $coordinates = $type->getColumn() . $this->getTypeRow($type);
+                $value = $type->getDataValue($data);
+                $sheet->setCellValue($coordinates, $value);
+
+                if ($styles = $type->getOption('cell_styles')) {
+                    $styles = is_callable($styles) ? $styles($data, $value, $type) : $styles;
+                    $sheet->getCell($coordinates)->getStyle()->applyFromArray($styles);
+                }
             }
         }
+
+        $this->columnWidthSetted = true;
 
         return $this;
     }
@@ -382,5 +398,25 @@ class Handler implements \Iterator, HandlerInterface
         }
 
         return false;
+    }
+
+    /**
+     * Get the value of columnWidthSetted
+     */
+    public function getColumnWidthSetted(): bool
+    {
+        return $this->columnWidthSetted;
+    }
+
+    /**
+     * Set the value of columnWidthSetted
+     *
+     * @return  self
+     */
+    public function setColumnWidthSetted(bool $columnWidthSetted): HandlerInterface
+    {
+        $this->columnWidthSetted = $columnWidthSetted;
+
+        return $this;
     }
 }

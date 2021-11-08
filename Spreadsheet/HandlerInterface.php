@@ -22,4 +22,6 @@ interface HandlerInterface
     public function hasError(): bool;
     public function hasChanged(): bool;
     public function hasKey($key): bool;
+    public function getColumnWidthSetted(): bool;
+    public function setColumnWidthSetted(bool $columnWidthSetted): HandlerInterface;
 }
