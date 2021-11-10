@@ -94,7 +94,7 @@ class Handler implements \Iterator, HandlerInterface
         return $this;
     }
 
-    public function setValues($worksheetOrRow, ?string $key = null): HandlerInterface
+    public function setValues($worksheetOrRow, $keys = null): HandlerInterface
     {
         if (!$worksheetOrRow instanceof Row && !$worksheetOrRow instanceof Worksheet) {
             throw new \Exception(sprintf("Param worksheetOrRow should be instance of %s or %s", Row::class, Worksheet::class));
@@ -109,10 +109,10 @@ class Handler implements \Iterator, HandlerInterface
             $worksheet = $worksheetOrRow;
         }
 
-        $key = $key ?? $this->getCurrentKey();
+        $keys = is_string($keys) ? [$keys] : $keys;
 
         foreach ($this->columnTypes as $type) {
-            if ($type->getOption('key') !== $key) {
+            if (is_array($keys) && !in_array($type->getOption('key'), $keys)) {
                 continue;
             }
 
