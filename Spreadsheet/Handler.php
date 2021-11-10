@@ -47,6 +47,9 @@ class Handler implements \Iterator, HandlerInterface
     /** @var boolean */
     protected $columnWidthSetted = false;
 
+    /** @var boolean */
+    protected $trackChanges = false;
+
     /** @var Error[] */
     protected $errors;
 
@@ -228,10 +231,12 @@ class Handler implements \Iterator, HandlerInterface
 
                 if ($type->hasChanged($newValue, $oldValue)) {
                     if ($type->dataCanBeUpdated($data)) {
-                        $oldStringValue = $type->getDataValue($data, true);
-                        $newStringValue = $type->getValue(null);
+                        if($this->trackChanges){
+                            $oldStringValue = $type->getDataValue($data, true);
+                            $newStringValue = $type->getValue(null);
+                            $this->changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
+                        }
 
-                        $this->changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
                         $type->setDataValue($data, $newValue);
 
                         //validate conf contraints
@@ -416,6 +421,26 @@ class Handler implements \Iterator, HandlerInterface
     public function setColumnWidthSetted(bool $columnWidthSetted): HandlerInterface
     {
         $this->columnWidthSetted = $columnWidthSetted;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of trackChanges
+     */ 
+    public function getTrackChanges() :bool
+    {
+        return $this->trackChanges;
+    }
+
+    /**
+     * Set the value of trackChanges
+     *
+     * @return  self
+     */ 
+    public function setTrackChanges($trackChanges) : HandlerInterface
+    {
+        $this->trackChanges = $trackChanges;
 
         return $this;
     }

@@ -255,7 +255,7 @@ abstract class AbstractType implements ColumnTypeInterface
                 break;
 
             case self::ACCESSOR_CALLBACK:
-                $setter($data, $this);
+                $setter($data, $this, $value);
                 break;
         }
 
