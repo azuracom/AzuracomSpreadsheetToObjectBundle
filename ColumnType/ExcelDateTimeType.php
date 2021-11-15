@@ -11,4 +11,12 @@ class ExcelDateTimeType extends AbstractType
     {
         return new ExcelDateTimeTransformer();
     }
+
+    public function hasChangedInner($newValue, $oldValue): bool
+    {
+        if ($newValue instanceof \DateTime && $oldValue instanceof \DateTime) {
+            return $newValue->getTimestamp() !== $oldValue->getTimestamp();
+        }
+        return true;
+    }
 }
