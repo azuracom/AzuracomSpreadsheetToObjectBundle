@@ -1,6 +1,7 @@
 Installation
 ============
 
+
 ### Step 1: Download the Bundle
 
 ```js
@@ -68,6 +69,7 @@ use Azuracom\SpreadsheetToObject\ColumnType\MoneyType;
 use Azuracom\SpreadsheetToObject\ColumnType\TextType;
 use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
 use Symfony\Component\Form\CallbackTransformer;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class OrderExportHandlerBuilder
 {
@@ -95,9 +97,27 @@ class OrderExportHandlerBuilder
             //set column type relatively to the data sent
             ->add('shipped', BooleanType::class, [
                 'label' => "Éxpédiée",
+                //use callabck to define cell styles
+                'cell_styles' => function ($order,$shipped,$columnType) {
+                    //should return an array styles
+                    return [
+                        'font' => [
+                            'color' => $shipped ? 
+                                ['rgb' => '00a65d'] : //green
+                                ['rgb' => 'ed1c24'] //red
+                                ,
+                        ]
+                    ];
+                }
             ])
             ->add('total', MoneyType::class, [
-                'label' => 'Total'
+                'label' => 'Total',
+                //apply style on spreadsheet cell: $cell->getStyle()->applyFromArray(...);
+                'cell_styles' => [
+                    'numberFormat' => [
+                        'formatCode' => NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE
+                    ]
+                ]
             ])
             //the field below are relaive to the order item
             ->setCurrentKey('order_item')
@@ -468,6 +488,12 @@ class ProductImportHandlerBuilder
         $handler = $this->factory->create();
 
         $handler
+            //if you want to retrieve all changes with $handler->getChanges() or use $handler->hasChanged() method
+            ->setTrackChanges(true) 
+            //by default on each setDataValues() calls changes and errors will be reseted, if you have multiple key in one handler
+            //you should pass this to false and manually reset after setting your data values
+            ->setAutoReset(false) 
+            ->setCurrentKey('product')
             ->add('reference', TextType::class, [
                 'allow_update' => false, //this field will only be setted during creation
                 'label' => 'Référence',
@@ -497,10 +523,8 @@ class ProductImportHandlerBuilder
                 'label' => 'Description',
                 'help' => $this->twig->render('path/to/template.html.twig', ['param' => 'paramvalue']),
                 'help_is_html' => true,
-            ]);
-
-
-        $handler->add('seller', EntityType::class,[
+            ])
+            ->add('seller', EntityType::class,[
                 'class' => Seller::class,
                 'property' => 'code',
 
@@ -523,7 +547,11 @@ class ProductImportHandlerBuilder
                         'countryCode' => $countryCode,
                     ]);
                 }
-            ]);
+            ])
+            ->setCurrentKey('variant')
+            ->add('code',TextType::class)
+            ->add('name',TextType::class)
+            ;
 
         return $handler;
     }
@@ -573,7 +601,14 @@ class ProductController extends AbstractController
                 $spreadsheetHandler->setValues($row);
 
                 //sample for retrive an existing object
-                $reference = $spreadsheetHandler->get('reference')->getValue();
+                $reference = $spreadsheetHandler
+                    ->get('reference','product') //if multiple key in the handler, set key has second param
+                    ->getValue(); 
+
+                $variantCode = $spreadsheetHandler
+                    ->get('code','variant') //if multiple key in the handler, set key has second param
+                    ->getValue(); 
+
                 $product = $this->getDoctrine()->getRepository(Product::class)->findOneBy([
                     'reference' => $reference
                 ]);
@@ -581,7 +616,13 @@ class ProductController extends AbstractController
                     $product = new Product();
                 }
 
-                $spreadsheetHandler->setDataValues($product,['validation_groups_name']);
+                $variant = '...'; //find variant logic
+
+                $spreadsheetHandler
+                    ->setCurrentKey('product')
+                    ->setDataValues($product,['Product']) //second arguments is validation group, generally use entity name
+                    ->setCurrentKey('variant')
+                    ->setDataValues($variant,['ProductVariant']);
                 if($spreadsheetHandler->hasError()){
                     /** @var Error */
                     foreach($spreadsheetHandler->getErrors() as $error){
@@ -595,6 +636,9 @@ class ProductController extends AbstractController
                     $em->persist($product);
                     $em->flush();
                 }
+
+                //manually reset changes and errors
+                $spreadsheetHandler->resetChanges()->resetErrors();
             }
             $this->addFlash('success','File loaded');
         }

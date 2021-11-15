@@ -50,6 +50,9 @@ class Handler implements \Iterator, HandlerInterface
     /** @var boolean */
     protected $trackChanges = false;
 
+    /** @var boolean */
+    protected $autoReset = true;
+
     /** @var Error[] */
     protected $errors;
 
@@ -201,8 +204,10 @@ class Handler implements \Iterator, HandlerInterface
     public function setDataValues($data, ?array $validationGroups = null, ?string $key = null): HandlerInterface
     {
         $key = $key ?? $this->getCurrentKey();
-        $this->errors = [];
-        $this->changes = [];
+        if ($this->autoReset) {
+            $this->resetChanges();
+            $this->resetErrors();
+        }
 
         if ($this->dispatcher->hasListeners(Events::PRE_SET_VALUES)) {
             $event = new PreSetValuesEvent($this, $data);
@@ -231,11 +236,6 @@ class Handler implements \Iterator, HandlerInterface
 
                 if ($type->hasChanged($newValue, $oldValue)) {
                     if ($type->dataCanBeUpdated($data)) {
-                        if($this->trackChanges){
-                            $oldStringValue = $type->getDataValue($data, true);
-                            $newStringValue = $type->getValue(null);
-                            $this->changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
-                        }
 
                         $type->setDataValue($data, $newValue);
 
@@ -249,6 +249,15 @@ class Handler implements \Iterator, HandlerInterface
                             ]);
 
                             $this->errors[] = new Error($message, $error->getCode());
+                        }
+
+                        //reset old value
+                        if(count($valueErrors)){
+                            $type->setDataValue($data, $newValue);
+                        }elseif($this->trackChanges){
+                            $oldStringValue = $type->getDataValue($data, true);
+                            $newStringValue = $type->getValue(null);
+                            $this->changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
                         }
                     } else {
                         $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.value_not_editable", [
@@ -427,8 +436,8 @@ class Handler implements \Iterator, HandlerInterface
 
     /**
      * Get the value of trackChanges
-     */ 
-    public function getTrackChanges() :bool
+     */
+    public function getTrackChanges(): bool
     {
         return $this->trackChanges;
     }
@@ -437,10 +446,45 @@ class Handler implements \Iterator, HandlerInterface
      * Set the value of trackChanges
      *
      * @return  self
-     */ 
-    public function setTrackChanges($trackChanges) : HandlerInterface
+     */
+    public function setTrackChanges($trackChanges): HandlerInterface
     {
         $this->trackChanges = $trackChanges;
+
+        return $this;
+    }
+
+
+    public function resetChanges(): HandlerInterface
+    {
+        $this->changes = [];
+
+        return $this;
+    }
+
+    public function resetErrors(): HandlerInterface
+    {
+        $this->errors = [];
+
+        return $this;
+    }
+
+    /**
+     * Get the value of autoReset
+     */
+    public function getAutoReset(): bool
+    {
+        return $this->autoReset;
+    }
+
+    /**
+     * Set the value of autoReset
+     *
+     * @return  self
+     */
+    public function setAutoReset(bool $autoReset): HandlerInterface
+    {
+        $this->autoReset = $autoReset;
 
         return $this;
     }

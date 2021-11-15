@@ -1,0 +1,12 @@
+azuracom_spreadsheet_to_object:
+    data_transformer_exception:
+        boolean: 'Valeurs acceptées: 0 or 1'
+        datetime: Cette valeur n'est pas une date valide
+        decimal: Cette valeur n'est pas un nombre valide
+        entity: Valeur %value% introuvable
+        integer: Cette valeur n'est pas un entier valide
+        excel_datetime: Cette valeur n'est pas une date valide
+    row_handler:
+        error_at_column: 'Ligne %row% colonne %column% : %error%'
+        error_at_property: 'Ligne %row% propriété %propety% : %error%'
+        value_not_editable: "Ligne %row% colonne %column% : cete valeur n'est pas modifiable"

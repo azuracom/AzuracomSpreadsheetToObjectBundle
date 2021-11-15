@@ -24,6 +24,10 @@ interface HandlerInterface
     public function hasKey($key): bool;
     public function getColumnWidthSetted(): bool;
     public function setColumnWidthSetted(bool $columnWidthSetted): HandlerInterface;
-    public function getTrackChanges() : bool;
-    public function setTrackChanges(bool $trackChanges) : HandlerInterface;
+    public function getTrackChanges(): bool;
+    public function setTrackChanges(bool $trackChanges): HandlerInterface;
+    public function resetChanges(): HandlerInterface;
+    public function resetErrors(): HandlerInterface;
+    public function getAutoReset(): bool;
+    public function setAutoReset(bool $autoReset): HandlerInterface;
 }
