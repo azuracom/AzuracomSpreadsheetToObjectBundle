@@ -54,10 +54,10 @@ class Handler implements \Iterator, HandlerInterface
     protected $autoReset = true;
 
     /** @var Error[] */
-    protected $errors;
+    protected $errors = [];
 
     /** @var array */
-    protected $changes;
+    protected $changes = [];
 
     public function __construct(
         ColumnTypeRegistry $registry,
