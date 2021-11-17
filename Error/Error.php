@@ -6,11 +6,15 @@ class Error
 {
     private $message;
     private $code;
+    private $row;
+    private $column;
 
-    public function __construct(string $message, $code = null)
+    public function __construct(string $message, $code = null,$row = null,$column = null)
     {
         $this->message = $message;
         $this->code = $code;
+        $this->row = $row;
+        $this->column = $column;
     }
 
     /**
@@ -49,6 +53,46 @@ class Error
     public function setCode($code)
     {
         $this->code = $code;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of row
+     */ 
+    public function getRow()
+    {
+        return $this->row;
+    }
+
+    /**
+     * Set the value of row
+     *
+     * @return  self
+     */ 
+    public function setRow($row)
+    {
+        $this->row = $row;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of column
+     */ 
+    public function getColumn()
+    {
+        return $this->column;
+    }
+
+    /**
+     * Set the value of column
+     *
+     * @return  self
+     */ 
+    public function setColumn($column)
+    {
+        $this->column = $column;
 
         return $this;
     }

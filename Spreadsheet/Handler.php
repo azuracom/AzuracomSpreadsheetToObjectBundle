@@ -222,6 +222,9 @@ class Handler implements \Iterator, HandlerInterface
                 continue;
             }
 
+            $column = $type->getColumn();
+            $row = $this->getTypeRow($type);
+
             //try to catch transformer exception            
             try {
 
@@ -243,29 +246,29 @@ class Handler implements \Iterator, HandlerInterface
                         $valueErrors = $this->validator->validate($newValue, $type->getOption('constraints'));
                         foreach ($valueErrors as $error) {
                             $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                                '%row%' => $this->getTypeRow($type),
-                                '%column%' => $type->getColumn(),
+                                '%row%' => $row,
+                                '%column%' => $column,
                                 '%error%' => $error->getMessage()
                             ]);
 
-                            $this->errors[] = new Error($message, $error->getCode());
+                            $this->errors[] = new Error($message, $error->getCode(), $row, $column);
                         }
 
                         //reset old value
-                        if(count($valueErrors)){
-                            $type->setDataValue($data, $newValue);
-                        }elseif($this->trackChanges){
+                        if (count($valueErrors)) {
+                            $type->setDataValue($data, $oldValue);
+                        } elseif ($this->trackChanges) {
                             $oldStringValue = $type->getDataValue($data, true);
                             $newStringValue = $type->getValue(null);
                             $this->changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
                         }
                     } else {
                         $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.value_not_editable", [
-                            '%row%' => $this->getTypeRow($type),
-                            '%column%' => $type->getColumn(),
+                            '%row%' => $row,
+                            '%column%' => $column,
                         ]);
 
-                        $this->errors[] = new Error($message, self::NOT_EDITABLE_CODE);
+                        $this->errors[] = new Error($message, self::NOT_EDITABLE_CODE, $row, $column);
                     }
                 }
             } catch (\Exception $e) {
@@ -275,12 +278,12 @@ class Handler implements \Iterator, HandlerInterface
                     $e->getMessage();
 
                 $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                    '%row%' => $this->getTypeRow($type),
-                    '%column%' => $type->getColumn(),
+                    '%row%' => $row,
+                    '%column%' => $column,
                     '%error%' => $error
                 ]);
 
-                $this->errors[] = new Error($message, $type->getOption('transformation_error_code'));
+                $this->errors[] = new Error($message, $type->getOption('transformation_error_code'), $row, $column);
             }
 
             if ($this->dispatcher->hasListeners(Events::POST_SET_VALUE)) {
@@ -301,12 +304,18 @@ class Handler implements \Iterator, HandlerInterface
             //try to retrieve column using the propertyPath
             $name =  $error->getPropertyPath();
             $message = null;
+            $column = null;
+            $row = $this->currentRow;
+
             foreach ($this->columnTypes as $type) {
                 $errorMatchPath = $type->getOption('error_match_path');
                 if ($type->getName() == $name || ($errorMatchPath && preg_match("#$errorMatchPath#", $name))) {
+                    $row = $this->getTypeRow($type);
+                    $column = $type->getColumn();
+
                     $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                        '%row%' => $this->getTypeRow($type),
-                        '%column%' => $type->getColumn(),
+                        '%row%' => $row,
+                        '%column%' => $column,
                         '%error%' =>  $error->getMessage()
                     ]);
                     break;
@@ -314,13 +323,13 @@ class Handler implements \Iterator, HandlerInterface
             }
             if (!$message) {
                 $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_property", [
-                    '%row%' => $this->currentRow,
-                    '%column%' => $name,
+                    '%row%' => $row,
+                    '%property%' => $name,
                     '%error%' =>  $error->getMessage()
                 ]);
             }
 
-            $this->errors[] = new Error($message, $error->getCode());
+            $this->errors[] = new Error($message, $error->getCode(),$row,$column);
         }
 
         return $this;

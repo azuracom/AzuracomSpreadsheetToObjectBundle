@@ -8,5 +8,5 @@ azuracom_spreadsheet_to_object:
         excel_datetime: This value is not a valid date
     row_handler:
         error_at_column: 'Row %row% column %column% : %error%'
-        error_at_property: 'Row %row% property %propety% : %error%'
+        error_at_property: 'Row %row% property %property% : %error%'
         value_not_editable: 'Row %row% column %column% : This property is not editable'
