@@ -15,8 +15,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Row;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class Handler implements \Iterator, HandlerInterface
 {
@@ -211,7 +211,7 @@ class Handler implements \Iterator, HandlerInterface
 
         if ($this->dispatcher->hasListeners(Events::PRE_SET_VALUES)) {
             $event = new PreSetValuesEvent($this, $data);
-            $this->dispatcher->dispatch($event, Events::PRE_SET_VALUES);
+            $this->dispatcher->dispatch(Events::PRE_SET_VALUES, $event);
             $data = $event->getData();
         }
 
@@ -222,13 +222,16 @@ class Handler implements \Iterator, HandlerInterface
                 continue;
             }
 
+            $column = $type->getColumn();
+            $row = $this->getTypeRow($type);
+
             //try to catch transformer exception            
             try {
 
                 $newValue = $type->getValue();
                 if ($this->dispatcher->hasListeners(Events::PRE_SET_VALUE)) {
                     $event = new PreSetValueEvent($this, $data, $newValue);
-                    $this->dispatcher->dispatch($event, Events::PRE_SET_VALUE);
+                    $this->dispatcher->dispatch(Events::PRE_SET_VALUE, $event);
                     $newValue = $event->getValue();
                 }
 
@@ -243,18 +246,18 @@ class Handler implements \Iterator, HandlerInterface
                         $valueErrors = $this->validator->validate($newValue, $type->getOption('constraints'));
                         foreach ($valueErrors as $error) {
                             $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                                '%row%' => $this->getTypeRow($type),
-                                '%column%' => $type->getColumn(),
+                                '%row%' => $row,
+                                '%column%' => $column,
                                 '%error%' => $error->getMessage()
                             ]);
 
-                            $this->errors[] = new Error($message, $error->getCode());
+                            $this->errors[] = new Error($message, $error->getCode(),$row,$column);
                         }
 
                         //reset old value
-                        if(count($valueErrors)){
-                            $type->setDataValue($data, $newValue);
-                        }elseif($this->trackChanges){
+                        if (count($valueErrors)) {
+                            $type->setDataValue($data, $oldValue);
+                        } elseif ($this->trackChanges) {
                             $oldStringValue = $type->getDataValue($data, true);
                             $newStringValue = $type->getValue(null);
                             $this->changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
@@ -265,7 +268,7 @@ class Handler implements \Iterator, HandlerInterface
                             '%column%' => $type->getColumn(),
                         ]);
 
-                        $this->errors[] = new Error($message, self::NOT_EDITABLE_CODE);
+                        $this->errors[] = new Error($message, self::NOT_EDITABLE_CODE,$row,$column);
                     }
                 }
             } catch (\Exception $e) {
@@ -280,18 +283,18 @@ class Handler implements \Iterator, HandlerInterface
                     '%error%' => $error
                 ]);
 
-                $this->errors[] = new Error($message, $type->getOption('transformation_error_code'));
+                $this->errors[] = new Error($message, $type->getOption('transformation_error_code'),$row,$column);
             }
 
             if ($this->dispatcher->hasListeners(Events::POST_SET_VALUE)) {
                 $event = new PostSetValueEvent($this, $data, $newValue);
-                $this->dispatcher->dispatch($event, Events::POST_SET_VALUE);
+                $this->dispatcher->dispatch(Events::POST_SET_VALUE, $event);
             }
         }
 
         if ($this->dispatcher->hasListeners(Events::POST_SET_VALUES)) {
             $event = new PostSetValuesEvent($this, $data);
-            $this->dispatcher->dispatch($event, Events::POST_SET_VALUES);
+            $this->dispatcher->dispatch(Events::POST_SET_VALUES, $event);
             $data = $event->getData();
         }
 
@@ -301,12 +304,17 @@ class Handler implements \Iterator, HandlerInterface
             //try to retrieve column using the propertyPath
             $name =  $error->getPropertyPath();
             $message = null;
+            $column = null;
+            $row = $this->currentRow;
+
             foreach ($this->columnTypes as $type) {
                 $errorMatchPath = $type->getOption('error_match_path');
                 if ($type->getName() == $name || ($errorMatchPath && preg_match("#$errorMatchPath#", $name))) {
+                    $row = $this->getTypeRow($type);
+                    $column = $type->getColumn();
                     $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                        '%row%' => $this->getTypeRow($type),
-                        '%column%' => $type->getColumn(),
+                        '%row%' => $row,
+                        '%column%' => $column,
                         '%error%' =>  $error->getMessage()
                     ]);
                     break;
@@ -314,13 +322,13 @@ class Handler implements \Iterator, HandlerInterface
             }
             if (!$message) {
                 $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_property", [
-                    '%row%' => $this->currentRow,
-                    '%column%' => $name,
+                    '%row%' => $row,
+                    '%property%' => $name,
                     '%error%' =>  $error->getMessage()
                 ]);
             }
 
-            $this->errors[] = new Error($message, $error->getCode());
+            $this->errors[] = new Error($message, $error->getCode(),$row,$column);
         }
 
         return $this;

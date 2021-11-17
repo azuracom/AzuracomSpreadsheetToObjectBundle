@@ -4,7 +4,7 @@ namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
 use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\DataTransformerInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
+use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;
 
 class EntityTransformer implements DataTransformerInterface
 {
