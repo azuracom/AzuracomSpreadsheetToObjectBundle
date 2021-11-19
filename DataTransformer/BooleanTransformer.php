@@ -41,9 +41,9 @@ class BooleanTransformer implements DataTransformerInterface
             }
         }
 
-        throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.boolean", 0, null, [
-            '%true_values%' => '"'.implode('", "', $this->trueValues).'"',
-            '%false_values%' => '"'.implode('", "', $this->falseValues).'"',
+        throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.boolean", 0, null, null, [
+            '%true_values%' => '"' . implode('", "', $this->trueValues) . '"',
+            '%false_values%' => '"' . implode('", "', $this->falseValues) . '"',
         ]);
     }
 }
