@@ -1,6 +1,6 @@
 azuracom_spreadsheet_to_object:
     data_transformer_exception:
-        boolean: 'Valeurs acceptées: 0 or 1'
+        boolean: 'Valeur(s) acceptée(s) pour oui: %true_values% - Valeur(s) acceptée(s) pour non: %false_values%'
         datetime: Cette valeur n'est pas une date valide
         decimal: Cette valeur n'est pas un nombre valide
         entity: Valeur %value% introuvable
