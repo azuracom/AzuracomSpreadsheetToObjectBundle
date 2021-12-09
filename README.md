@@ -60,7 +60,7 @@ Usage
 ```php
 <?php
 
-namespace App\SpreadsheetHandlerBuilder;
+namespace App\Spreadsheet\HandlerBuilder;
 
 use Azuracom\SpreadsheetToObject\ColumnType\BooleanType;
 use Azuracom\SpreadsheetToObject\ColumnType\CollectionType;
@@ -174,7 +174,7 @@ namespace App\Controller;
 
 use App\Entity\Order;
 use App\Entity\OrderItem;
-use App\SpreadsheetHandlerBuilder\OrderExportHandlerBuilder;
+use App\Spreadsheet\HandlerBuilder\OrderExportHandlerBuilder;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\Routing\Annotation\Route;
@@ -457,7 +457,7 @@ twig:
 ```php
 <?php
 
-namespace App\SpreadsheetHandlerBuilder;
+namespace App\Spreadsheet\HandlerBuilder;
 
 use App\Entity\Product;
 use App\Entity\Seller;
@@ -467,6 +467,7 @@ use Azuracom\SpreadsheetToObject\ColumnType\TextType;
 use Azuracom\SpreadsheetToObject\ColumnType\EntityType;
 use Azuracom\SpreadsheetToObject\DataTransformer\EntityTransformer;
 use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
+use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Range;
@@ -483,7 +484,7 @@ class ProductImportHandlerBuilder
     }
 
 
-    public function getHandler()
+    public function getHandler() : HandlerInterface
     {
         $handler = $this->factory->create();
 
@@ -566,7 +567,7 @@ class ProductImportHandlerBuilder
 namespace App\Controller;
 
 use App\Entity\Product;
-use App\SpreadsheetHandlerBuilder\ProductImportHandlerBuilder;
+use App\Spreadsheet\HandlerBuilder\ProductImportHandlerBuilder;
 use Azuracom\SpreadsheetToObject\Error\Error;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -677,5 +678,92 @@ class ProductController extends AbstractController
         </div>
     </div>
 {% endblock %}
+
+```
+
+
+### Use with sylius attribute
+
+1. Create column Type
+
+```php
+<?php
+
+namespace App\Spreadsheet\ColumnType;
+
+use Azuracom\SpreadsheetToObject\ColumnType\AttributeType;
+use Sylius\Component\Resource\Factory\FactoryInterface;
+
+class ProductAttributeType extends AttributeType
+{
+    public function __construct(FactoryInterface $productAttributeValueFactory,$defaultLocale)
+    {
+        $this->factory = $productAttributeValueFactory;
+        $this->locale = $defaultLocale;
+    }
+}
+```
+
+if the factory doesn't autowire:
+
+
+```yaml
+#config/services.yaml
+services:
+    #bind factory if multiple usage
+    _defaults:
+        bind:
+            $defaultLocale: '%locale%'
+            $productAttributeValueFactory: '@sylius.factory.product_attribute_value'
+    #or set factoru for the service
+    App\Spreadsheet\ColumnType\PlotAttributeType:
+        arguments:
+            $productAttributeValueFactory: '@sylius.factory.product_attribute_value'
+            $defaultLocale: '%locale%'
+```
+
+2. Build column
+
+```php
+<?php
+
+namespace App\Spreadsheet\HandlerBuilder;
+
+use App\Entity\Product;
+use App\Entity\ProductAttribute;
+use App\Spreadsheet\ColumnType\ProductAttributeType;
+use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
+use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use Sylius\Component\Attribute\AttributeType\CheckboxAttributeType;
+use Azuracom\SpreadsheetToObject\DataTransformer\BooleanTransformer;
+
+class ProductImportHandlerBuilder
+{
+
+    public function __construct(
+        private HandlerFactoryInterface $factory,
+        private EntityManagerInterface $em,
+    ) {
+    }
+
+    public function getHandler() : HandlerInterface
+    {
+        $handler = $this->factory->create();
+
+        $attributes = $this->em->getRepository(ProductAttribute::class)->findBy([], ['position' => 'ASC']);
+        foreach ($attributes as $attribute) {
+            $handler->add($attribute->getCode(), ProductAttributeType::class, [
+                'attribute' => $attribute,
+                //manualy set type inner transformer
+                'inner_transformer' => [
+                    CheckboxAttributeType::TYPE => new BooleanTransformer(['oui'],['non']),
+                ]
+            ]);
+        }
+
+        return $handler;
+    }
+}
 
 ```

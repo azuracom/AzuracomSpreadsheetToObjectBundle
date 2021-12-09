@@ -15,12 +15,15 @@ class BooleanTransformer implements DataTransformerInterface
 
     public function __construct(array $trueValues = [1, '1', 'yes', 'y'], array $falseValues = [0, '0', 'no', 'n'])
     {
+        if(count($trueValues) === 0 || count($falseValues) === 0 ){
+            throw new \LogicException("True values and false values should countains at least one element");
+        }
         $this->trueValues = $trueValues;
         $this->falseValues = $falseValues;
     }
     public function transform($boolvalue)
     {
-        return $boolvalue ? 1 : 0;
+        return $boolvalue ? $this->trueValues[0] : $this->falseValues[0];
     }
 
     public function reverseTransform($stringValue)
