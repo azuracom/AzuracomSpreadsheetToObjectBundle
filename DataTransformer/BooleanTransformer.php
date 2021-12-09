@@ -15,7 +15,7 @@ class BooleanTransformer implements DataTransformerInterface
 
     public function __construct(array $trueValues = [1, '1', 'yes', 'y'], array $falseValues = [0, '0', 'no', 'n'])
     {
-        if(count($trueValues) === 0 || count($falseValues) === 0 ){
+        if (count($trueValues) === 0 || count($falseValues) === 0) {
             throw new \LogicException("True values and false values should countains at least one element");
         }
         $this->trueValues = $trueValues;
@@ -23,6 +23,10 @@ class BooleanTransformer implements DataTransformerInterface
     }
     public function transform($boolvalue)
     {
+        if ($boolvalue === null) {
+            return null;
+        }
+
         return $boolvalue ? $this->trueValues[0] : $this->falseValues[0];
     }
 

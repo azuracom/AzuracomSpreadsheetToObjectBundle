@@ -38,6 +38,7 @@ abstract class AttributeType extends AbstractType
             'inner_transformer' => [],
             'date_format_code' => NumberFormat::FORMAT_DATE_DDMMYYYY,
             'datetime_format_code' => NumberFormat::FORMAT_DATE_DATETIME,
+            'allow_null_value' => false,
             'getter' => function (Options $options) {
                 /** @var AttributeInterface */
                 $attribute = $options['attribute'];
@@ -49,11 +50,12 @@ abstract class AttributeType extends AbstractType
                 /** @var AttributeInterface */
                 $attribute = $options['attribute'];
                 return function (AttributeSubjectInterface $subject, $column, $value) use ($attribute) {
+
                     if ($attributeValue = $subject->getAttributeByCodeAndLocale($attribute->getCode(), $this->locale)) {
-                        if ($value->getValue() !== null) {
+                        if ($value!== null && $value->getValue() !== null) {
                             $attributeValue->setValue($value->getValue());
                         } else {
-                            $subject->removeAttribute($value);
+                            $subject->removeAttribute($attributeValue);
                         }
                     } elseif ($value !== null) {
                         $subject->addAttribute($value);
@@ -87,6 +89,9 @@ abstract class AttributeType extends AbstractType
             },
         ]);
 
+        $resolver->setAllowedTypes('allow_null_value','boolean');
+        $resolver->setAllowedTypes('date_format_code','string');
+        $resolver->setAllowedTypes('datetime_format_code','string');
         $resolver->setAllowedTypes('attribute', AttributeInterface::class);
         $resolver->setAllowedTypes('inner_transformer', DataTransformerInterface::class . '[]');
         $resolver->setRequired('attribute');
@@ -119,6 +124,6 @@ abstract class AttributeType extends AbstractType
         $innerTransformer = isset($options['inner_transformer'][$attribute->getType()]) ?
             $options['inner_transformer'][$attribute->getType()] :
             $this->getDefaultInnerTransformer($attribute);
-        return new AttributeValueTransformer($this->factory, $attribute, $innerTransformer, $this->locale);
+        return new AttributeValueTransformer($this->factory, $attribute, $innerTransformer, $this->locale,$options['allow_null_value']);
     }
 }
