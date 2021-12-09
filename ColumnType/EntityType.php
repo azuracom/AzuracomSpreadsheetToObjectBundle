@@ -25,14 +25,18 @@ class EntityType extends AbstractType
             'find_method' => 'findAll',
             'find_arguments' => [],
             'property' => null,
+            'create_if_not_found' => false,
+            'create_callback' => null,
         ]);
 
         $resolver->setRequired(['class']);
         $resolver->setAllowedTypes('class', 'string');
         $resolver->setAllowedTypes('find_method', 'string');
-        $resolver->setAllowedTypes('property', ['string','callable','null']);
+        $resolver->setAllowedTypes('property', ['string', 'callable', 'null']);
         $resolver->setAllowedTypes('find_callback', ['null', 'callable']);
-        $resolver->setAllowedTypes('find_arguments','array');
+        $resolver->setAllowedTypes('find_arguments', 'array');
+        $resolver->setAllowedTypes('create_if_not_found', 'boolean');
+        $resolver->setAllowedTypes('create_callback', ['null', 'callable']);
     }
 
     public function getDefaultTransformer($options): ?DataTransformerInterface
@@ -42,7 +46,9 @@ class EntityType extends AbstractType
             $options['property'],
             $options['find_callback'],
             $options['find_method'],
-            $options['find_arguments']
+            $options['find_arguments'],
+            $options['create_if_not_found'],
+            $options['create_callback'],
         );
     }
 

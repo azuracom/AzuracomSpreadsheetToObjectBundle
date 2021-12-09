@@ -20,18 +20,26 @@ class EntityTransformer implements DataTransformerInterface
 
     private $findArguments;
 
+    private $createIfNotFound;
+
+    private $createCallback;
+
     public function __construct(
         EntityRepository $repository,
         $property = null,
         ?callable $findCallback = null,
         ?string $findMethod ='findAll',
-        array $findArguments = []
+        array $findArguments = [],
+        bool $createIfNotFound = false,
+        ?callable $createCallback = null,
     ) {
         $this->repository = $repository;
         $this->property = $property;
         $this->findCallback = $findCallback;
         $this->findMethod = $findMethod;
         $this->findArguments = $findArguments;
+        $this->createIfNotFound = $createIfNotFound;
+        $this->createCallback = $createCallback;
     }
 
     public function transform($value)
@@ -71,9 +79,18 @@ class EntityTransformer implements DataTransformerInterface
 
 
         if (!$result) {
-            throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.entity", 0, null, null, [
-                '%value%' => $value
-            ]);
+            if(!$this->createIfNotFound){
+                throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.entity", 0, null, null, [
+                    '%value%' => $value
+                ]);
+            }else{
+                $className = $this->repository->getClassName();
+                $result = new $className();
+                if($this->createCallback){
+                    call_user_func_array($this->createCallback, [$result,$value,$this]);
+                }
+            }
+
         }
 
         return $result;
