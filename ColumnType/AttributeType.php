@@ -49,7 +49,7 @@ abstract class AttributeType extends AbstractType
             'setter' => function (Options $options) {
                 /** @var AttributeInterface */
                 $attribute = $options['attribute'];
-                return function (AttributeSubjectInterface $subject, $column, $value) use ($attribute) {
+                return function (AttributeSubjectInterface $subject, $value) use ($attribute) {
 
                     if ($attributeValue = $subject->getAttributeByCodeAndLocale($attribute->getCode(), $this->locale)) {
                         if ($value!== null && $value->getValue() !== null) {
