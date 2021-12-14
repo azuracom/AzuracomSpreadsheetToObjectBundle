@@ -26,6 +26,12 @@ abstract class AbstractType implements ColumnTypeInterface
     /** @var mixed */
     protected $value;
 
+    /** @var mixed */
+    protected $transformedValue;
+
+    /** @var mixed */
+    protected $reverseTransformedValue;
+
     /** @var array */
     protected $options;
 
@@ -255,7 +261,7 @@ abstract class AbstractType implements ColumnTypeInterface
                 break;
 
             case self::ACCESSOR_CALLBACK:
-                $setter($data, $this, $value);
+                $setter($data, $value, $this);
                 break;
         }
 
@@ -323,12 +329,33 @@ abstract class AbstractType implements ColumnTypeInterface
 
 
         if ($transformation !== null) {
-            $transformers = $transformation == 'reverseTransform' ? array_reverse($this->transformers) : $this->transformers;
-            foreach ($transformers as $transformer) {
-                $value = $transformer->{$transformation}($value);
+            if ($transformation === 'reverseTransform') {
+                //try to get cached value
+                if ($this->reverseTransformedValue !== null) {
+                    $value = $this->reverseTransformedValue;
+                } else {
+                    $transformers = array_reverse($this->transformers);
+                    foreach ($transformers as $transformer) {
+                        $value = $transformer->{$transformation}($value);
+                    }
+                    //cache value to multiple usage
+                    $this->reverseTransformedValue = $value;
+                }
+            } else {
+                //try to get cached value
+                if ($this->transformedValue) {
+                    $value = $this->transformedValue;
+                } else {
+                    foreach ($this->transformers as $transformer) {
+                        $value = $transformer->{$transformation}($value);
+                    }
+
+                    //cache value to multiple usage
+                    $this->transformedValue = $value;
+                }
             }
         }
-
+        
         return $value === null ? $this->getOption('empty_data') : $value;
     }
 
@@ -411,6 +438,15 @@ abstract class AbstractType implements ColumnTypeInterface
     public function resetModelTransformers(): ColumnTypeInterface
     {
         $this->transformers = [];
+
+        return $this;
+    }
+
+    public function resetValues() : ColumnTypeInterface
+    {
+        $this->value = null;
+        $this->transformedValue = null;
+        $this->reverseTransformedValue = null;
 
         return $this;
     }

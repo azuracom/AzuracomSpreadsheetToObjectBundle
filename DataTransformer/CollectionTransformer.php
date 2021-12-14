@@ -2,19 +2,27 @@
 
 namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Form\DataTransformerInterface;
 
 class CollectionTransformer implements DataTransformerInterface
 {
-
+    /** @var string */
     private $separator;
-    private $baseTransformer;
 
-    public function __construct(DataTransformerInterface $baseTransformer, $separator = ";")
-    {
-        $this->baseTransformer = $baseTransformer;
+    /** @var  DataTransformerInterface|null */
+    private $itemTransformer;
+
+    /** @var  callable|null */
+    private $collectionConstruct;
+
+    public function __construct(
+        string $separator,
+        ?callable $collectionConstruct,
+        ?DataTransformerInterface $itemTransformer = null
+    ) {
+        $this->itemTransformer = $itemTransformer;
         $this->separator = $separator;
+        $this->collectionConstruct = $collectionConstruct;
     }
 
     public function transform($collection)
@@ -25,7 +33,8 @@ class CollectionTransformer implements DataTransformerInterface
 
         $string = "";
         foreach ($collection as $item) {
-            $string .= $this->baseTransformer->transform($item) . $this->separator;
+            $itemString = $this->itemTransformer ? $this->itemTransformer->transform($item) : (string) $item;
+            $string .= $itemString . $this->separator;
         }
 
         return substr($string, 0, -1);
@@ -34,11 +43,13 @@ class CollectionTransformer implements DataTransformerInterface
 
     public function reverseTransform($string)
     {
-        $collection = new ArrayCollection();
-
-        if($string){
+        $construct = $this->collectionConstruct;
+        $collection = $construct ? $construct() : [];
+        if ($string) {
             foreach (explode($this->separator, $string) as $value) {
-                $collection->add($this->baseTransformer->reverseTransform($value));
+                $value = trim($value);
+                $value = $this->itemTransformer ? $this->itemTransformer->reverseTransform($value) : $value;
+                $collection[] = $value;
             }
         }
 

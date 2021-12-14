@@ -26,9 +26,17 @@ class ChoiceType extends AbstractType
         $choices = isset($options['choices']) ? $options['choices'] : [] ;
         return new CallbackTransformer(
             function($value) use ($choices){
+                if($value === null){
+                    return null;
+                }
+
                 return array_search($value,$choices);
             },
             function($value) use ($choices) {
+                if($value === null){
+                    return null;
+                }
+                
                 if(!array_key_exists((string)$value,$choices)){
                     throw new TransformationFailedException("Cette valeur ne fait pas partie de la liste");
                 }

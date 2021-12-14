@@ -124,7 +124,7 @@ class Handler implements \Iterator, HandlerInterface
 
             $coordinate = $type->getColumn() . $this->getTypeRow($type);
             $cell = $worksheet->getCell($coordinate);
-
+            $type->resetValues();
             $type->setValue($cell->getValue());
         }
 
@@ -161,6 +161,7 @@ class Handler implements \Iterator, HandlerInterface
 
             if ($type->isDataMapped($data, $key)) {
                 $coordinates = $type->getColumn() . $this->getTypeRow($type);
+                $type->resetValues();
                 $value = $type->getDataValue($data);
                 $sheet->setCellValue($coordinates, $value);
 
@@ -329,7 +330,7 @@ class Handler implements \Iterator, HandlerInterface
                 ]);
             }
 
-            $this->errors[] = new Error($message, $error->getCode(),$row,$column);
+            $this->errors[] = new Error($message, $error->getCode(), $row, $column);
         }
 
         return $this;
@@ -341,7 +342,7 @@ class Handler implements \Iterator, HandlerInterface
     }
 
     //iterator stuff
-    public function rewind()
+    public function rewind() : void
     {
         $this->position = 0;
     }
@@ -356,12 +357,12 @@ class Handler implements \Iterator, HandlerInterface
         return $this->position;
     }
 
-    public function next()
+    public function next() : void
     {
         ++$this->position;
     }
 
-    public function valid()
+    public function valid() : bool
     {
         return isset($this->columnTypes[$this->position]);
     }

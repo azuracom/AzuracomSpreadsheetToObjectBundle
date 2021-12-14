@@ -517,9 +517,9 @@ class ProductImportHandlerBuilder
                 //errors triggered by validator with this path will be mapped to this column
                 'error_match_path' => 'translations[fr].description',
                 //custom logic to set value
-                'setter' => function (Product $product, ColumnTypeInterface $columnType) {
-                    $value = $columnType->getValue();
-                    $product->getTranslations('fr')->setDescription($value);
+                'setter' => function (Product $product,$value, ColumnTypeInterface $columnType) {
+                    $locale = $columnType->getOption('locale'); //sample for columnType usage, not mandatory
+                    $product->getTranslations($locale)->setDescription($value);
                 },
                 'label' => 'Description',
                 'help' => $this->twig->render('path/to/template.html.twig', ['param' => 'paramvalue']),

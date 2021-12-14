@@ -30,4 +30,5 @@ interface ColumnTypeInterface
     public function addTransformer(DataTransformerInterface $transformer, $forceAppend = false): self;
     public function resetModelTransformers(): self;
     public static function getPrefix(): string;
+    public function resetValues() : self;
 }
