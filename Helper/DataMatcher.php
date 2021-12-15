@@ -26,7 +26,7 @@ class DataMatcher
 
     public function addData(string $type, $data, $uniqueId = null)
     {
-        $this->currentUniqueId = $uniqueId ? $uniqueId : $this->guessUniqueKey($data);
+        $this->currentUniqueId = $uniqueId ? $uniqueId : $this->guessUniqueKey($type, $data);
         $this->currentType = $type;
         $this->datas[$type][$this->currentUniqueId] = $data;
 
@@ -41,17 +41,17 @@ class DataMatcher
         $this->matches[$this->currentType][$matchKey][$match] = $this->currentUniqueId;
     }
 
-    public function guessUniqueKey($data)
+    public function guessUniqueKey(string $type, $data)
     {
-        if (is_array($data) && isset($data['id'])) {
+        if (is_array($data) && isset($data['id']) && $data['id']) {
             return $data['id'];
         }
 
-        if (is_object($data) && method_exists($data, 'getId')) {
+        if (is_object($data) && method_exists($data, 'getId') && $data->getId()) {
             return $data->getId();
         }
 
-        throw new \Exception("Please provide data unique id");
+        return uniqid($type . "_");
     }
 
     public function setMatchesForData(string $type, $uniqueId, array $matches)
@@ -69,8 +69,9 @@ class DataMatcher
         return $this;
     }
 
-    public function findData(string $type, array $matches)
+    public function findData(string $type, $matches)
     {
+        $matches = is_array($matches) ? $matches : [$matches];
         $key = $this->getDataKey($type, $matches);
         if ($key !== null) {
             return $this->getDataAtKey($type, $key);

@@ -767,3 +767,107 @@ class ProductImportHandlerBuilder
 }
 
 ```
+
+### Use with AzuracomProcessBundle
+
+```php
+<?php
+
+namespace App\Process;
+
+use App\Entity\Product;
+use App\Spreadsheet\HandlerBuilder\ProductHandlerBuilder;
+//check this class for more details on available tools
+use Azuracom\ProcessBundle\Handler\AbstractSpreadsheetHandler; 
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Symfony\Contracts\Service\Attribute\SubscribedService;
+use Symfony\Contracts\Service\ServiceSubscriberInterface;
+use Symfony\Contracts\Service\ServiceSubscriberTrait;
+
+class ImportProductHandler extends AbstractSpreadsheetHandler implements ServiceSubscriberInterface
+{
+    use ServiceSubscriberTrait;
+
+    const TYPE_DEFAULT = self::class;
+
+    public function configure(): void
+    {
+        //in this method you should call parent, configure the spreadsheetHandler
+        parent::configure();
+
+        $this->spreadsheetHandler = $this->spreadSheetHandlerBuilder()
+            ->getHandler();
+
+        /** @var Product[] */
+        $products = $this->em->getRepository(Product::class)->findAll();
+        foreach ($products as $product) {
+            $this->addProductInDataMatcher($product);
+        }
+    }
+
+
+    private function addProductInDataMatcher(Product $product)
+    {
+        $this->dataMatcher
+            ->addData('product', $product)
+            ->addMatch($product->getReference());
+    }
+
+    #[SubscribedService]
+    private function spreadSheetHandlerBuilder(): ProductHandlerBuilder
+    {
+        return $this->container->get(__METHOD__);
+    }
+
+    protected function read(Worksheet $worksheet): void
+    {
+        foreach ($worksheet->getRowIterator(2) as $row) {
+            $this->spreadsheetHandler->setValues($row);
+            $reference = $this->spreadsheetHandler->get('reference')->getValue();
+
+            //check if product exists or create
+            if (!$product = $this->dataMatcher->findData('product', $reference)) {
+                $product = new Product();
+                $product->setReference($reference);
+                $this->counter->increment('created');
+                //add in datamatcher to handle multiple occurence in single file
+                $this->addProductInDataMatcher($product);
+                $this->em->persist($product);
+            }
+
+            $this->spreadsheetHandler->setDataValues($product);
+            foreach ($this->spreadsheetHandler->getErrors() as $error) {
+                $this->helper->error($error->getMessage());
+            }
+
+            //be sure that trackChanges is enabled in the spreadSheet handler if you want to increment only when updated
+            if ($this->spreadsheetHandler->hasChanged() && !$this->spreadsheetHandler->hasError() && $product->getId() !== null) {
+                $this->counter->increment('updated');
+            }
+        }
+    }
+
+    protected function getClearClassNames(): array
+    {
+        //class to clear when file has error, generally all entity class edited with data from spreadsheet file
+        return [
+            Product::class,
+        ];
+    }
+
+    protected function getSuccessMessage(): string
+    {
+        return sprintf(
+            "%s produit(s) mis à jour, %s produit(s) créé(s)",
+            $this->counter->get('updated'),
+            $this->counter->get('created')
+        );
+    }
+
+    public static function getTypeLabel($type): string
+    {
+        return "Import Produit";
+    }
+}
+
+```
