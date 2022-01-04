@@ -125,7 +125,7 @@ class Handler implements \Iterator, HandlerInterface
             $coordinate = $type->getColumn() . $this->getTypeRow($type);
             $cell = $worksheet->getCell($coordinate);
             $type->resetValues();
-            $type->setValue($cell->getValue());
+            $type->setValue($cell->getCalculatedValue());
         }
 
         return $this;
