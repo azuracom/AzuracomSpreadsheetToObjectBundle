@@ -33,10 +33,14 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
         $choices = $this->attribute->getConfiguration()['choices'];
         $string = "";
         foreach ($value as $choice) {
+            if(!isset($choices[$choice]) || !isset($choices[$choice][$this->defaultLocale])){
+                continue;
+            }
+
             $string .= $choices[$choice][$this->defaultLocale] . $this->choiceSeparator;
         }
 
-        return substr($string, 0, -1);
+        return $string ? substr($string, 0, -1) : "";
     }
 
 
