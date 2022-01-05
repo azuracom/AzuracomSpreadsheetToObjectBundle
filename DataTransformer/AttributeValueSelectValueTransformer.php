@@ -14,7 +14,7 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
     private $choiceSeparator;
     private $defaultLocale;
 
-    public function __construct(AttributeInterface $attribute,$defaultLocale, $choiceSeparator = ',')
+    public function __construct(AttributeInterface $attribute, $defaultLocale, $choiceSeparator = ',')
     {
         if ($attribute->getType() !== SelectAttributeType::TYPE) {
             throw new \LogicException(sprintf("Attribute should be of type %s", SelectAttributeType::TYPE));
@@ -61,17 +61,16 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
             }
 
             if (!$foundedKey) {
-                throw new TransformationFailedException(sprintf(
-                    "Value %s not found",
-                    $value
-                ));
+                throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, null, [
+                    '%value%' => (string) $value,
+                ]);
             }
 
             $results[] = $foundedKey;
         }
 
         if (!$multiple && count($results) > 1) {
-            throw new TransformationFailedException(sprintf("Only one value is required for thie field"));
+            throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.attribute_value_multiple_not_allowed");
         }
 
         return $results;

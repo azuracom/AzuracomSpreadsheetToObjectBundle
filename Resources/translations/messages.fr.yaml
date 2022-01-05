@@ -6,6 +6,8 @@ azuracom_spreadsheet_to_object:
         entity: Valeur %value% introuvable
         integer: Cette valeur n'est pas un entier valide
         excel_datetime: Cette valeur n'est pas une date valide
+        choice_value_not_found: Valeur %value% n'est pas dans la liste prédéfinie
+        attribute_value_multiple_not_allowed: Une seule valeur est permise pour ce champ
     row_handler:
         error_at_column: 'Ligne %row% colonne %column% : %error%'
         error_at_property: 'Ligne %row% propriété %property% : %error%'

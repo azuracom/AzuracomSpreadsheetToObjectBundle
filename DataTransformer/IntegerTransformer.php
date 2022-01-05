@@ -20,7 +20,7 @@ class IntegerTransformer implements DataTransformerInterface
         }
 
         if (!preg_match("#^\d+$#",$stringValue)) {
-            throw new TransformationFailedException("Cette valeur n'est pas entier valide");
+            throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.integer");
         }
 
         return (int) $stringValue;

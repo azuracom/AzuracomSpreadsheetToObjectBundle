@@ -38,7 +38,9 @@ class ChoiceType extends AbstractType
                 }
                 
                 if(!array_key_exists((string)$value,$choices)){
-                    throw new TransformationFailedException("Cette valeur ne fait pas partie de la liste");
+                    throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, null, [
+                        '%value%' => (string) $value,
+                    ]);
                 }
 
                 return $choices[(string)$value];
