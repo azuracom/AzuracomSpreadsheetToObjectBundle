@@ -62,7 +62,7 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
 
             if (!$foundedKey) {
                 throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, null, [
-                    '%value%' => (string) $value,
+                    '%value%' => (string) $choice,
                 ]);
             }
 
