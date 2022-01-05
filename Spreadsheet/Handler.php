@@ -15,8 +15,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Row;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class Handler implements \Iterator, HandlerInterface
 {
@@ -212,7 +212,7 @@ class Handler implements \Iterator, HandlerInterface
 
         if ($this->dispatcher->hasListeners(Events::PRE_SET_VALUES)) {
             $event = new PreSetValuesEvent($this, $data);
-            $this->dispatcher->dispatch($event, Events::PRE_SET_VALUES);
+            $this->dispatcher->dispatch(Events::PRE_SET_VALUES, $event);
             $data = $event->getData();
         }
 
@@ -232,7 +232,7 @@ class Handler implements \Iterator, HandlerInterface
                 $newValue = $type->getValue();
                 if ($this->dispatcher->hasListeners(Events::PRE_SET_VALUE)) {
                     $event = new PreSetValueEvent($this, $data, $newValue);
-                    $this->dispatcher->dispatch($event, Events::PRE_SET_VALUE);
+                    $this->dispatcher->dispatch(Events::PRE_SET_VALUE, $event);
                     $newValue = $event->getValue();
                 }
 
@@ -289,13 +289,13 @@ class Handler implements \Iterator, HandlerInterface
 
             if ($this->dispatcher->hasListeners(Events::POST_SET_VALUE)) {
                 $event = new PostSetValueEvent($this, $data, $newValue);
-                $this->dispatcher->dispatch($event, Events::POST_SET_VALUE);
+                $this->dispatcher->dispatch(Events::POST_SET_VALUE, $event);
             }
         }
 
         if ($this->dispatcher->hasListeners(Events::POST_SET_VALUES)) {
             $event = new PostSetValuesEvent($this, $data);
-            $this->dispatcher->dispatch($event, Events::POST_SET_VALUES);
+            $this->dispatcher->dispatch(Events::POST_SET_VALUES, $event);
             $data = $event->getData();
         }
 

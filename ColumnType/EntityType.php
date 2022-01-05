@@ -48,7 +48,7 @@ class EntityType extends AbstractType
             $options['find_method'],
             $options['find_arguments'],
             $options['create_if_not_found'],
-            $options['create_callback'],
+            $options['create_callback']
         );
     }
 

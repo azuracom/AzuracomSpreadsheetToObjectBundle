@@ -4,7 +4,7 @@ namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
 use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\DataTransformerInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
+use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;
 
 class EntityTransformer implements DataTransformerInterface
 {
@@ -80,7 +80,7 @@ class EntityTransformer implements DataTransformerInterface
 
         if (!$result) {
             if(!$this->createIfNotFound){
-                throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.entity", 0, null, null, [
+                throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.entity", 0, null, [
                     '%value%' => $value
                 ]);
             }else{

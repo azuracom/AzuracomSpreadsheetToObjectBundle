@@ -2,7 +2,7 @@
 
 namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
-use Symfony\Component\Form\Exception\TransformationFailedException;
+use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;
 use Symfony\Component\Form\DataTransformerInterface;
 
 class DateTimeTransformer implements DataTransformerInterface

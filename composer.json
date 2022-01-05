@@ -14,11 +14,11 @@
     ],
     "require": {
         "php": ">=7.2",
-        "symfony/validator": ">=4.4",
-        "symfony/event-dispatcher": ">=4.4",
+        "symfony/validator": ">=3.4",
+        "symfony/event-dispatcher": ">=3.4",
         "phpoffice/phpspreadsheet": "^1.0",
-        "symfony/form": ">=4.4",
-        "symfony/options-resolver": ">=4.4"
+        "symfony/form": ">=3.4",
+        "symfony/options-resolver": ">=3.4"
     },
     "config": {
         "sort-packages": true

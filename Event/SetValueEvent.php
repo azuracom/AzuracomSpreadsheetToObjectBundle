@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\Event;
 
 use Azuracom\SpreadsheetToObject\ColumnType\ColumnTypeInterface;
-use Symfony\Contracts\EventDispatcher\Event;
+use Symfony\Component\EventDispatcher\Event;
 
 class SetValueEvent extends Event
 {

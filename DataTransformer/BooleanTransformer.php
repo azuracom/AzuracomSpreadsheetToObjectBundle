@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
 use Symfony\Component\Form\DataTransformerInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
+use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;
 
 class BooleanTransformer implements DataTransformerInterface
 {
@@ -48,7 +48,7 @@ class BooleanTransformer implements DataTransformerInterface
             }
         }
 
-        throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.boolean", 0, null, null, [
+        throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.boolean", 0, null, [
             '%true_values%' => '"' . implode('", "', $this->trueValues) . '"',
             '%false_values%' => '"' . implode('", "', $this->falseValues) . '"',
         ]);

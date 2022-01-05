@@ -7,7 +7,7 @@ use Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry;
 use Azuracom\SpreadsheetToObject\Spreadsheet\Handler;
 use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormInterface;
 

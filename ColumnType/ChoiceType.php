@@ -4,7 +4,7 @@ namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\DataTransformerInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
+use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ChoiceType extends AbstractType
@@ -38,7 +38,7 @@ class ChoiceType extends AbstractType
                 }
                 
                 if(!array_key_exists((string)$value,$choices)){
-                    throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, null, [
+                    throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, [
                         '%value%' => (string) $value,
                     ]);
                 }

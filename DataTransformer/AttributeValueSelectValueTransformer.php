@@ -5,7 +5,7 @@ namespace Azuracom\SpreadsheetToObject\DataTransformer;
 use Sylius\Component\Attribute\AttributeType\SelectAttributeType;
 use Sylius\Component\Attribute\Model\AttributeInterface;
 use Symfony\Component\Form\DataTransformerInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
+use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;;
 
 class AttributeValueSelectValueTransformer implements DataTransformerInterface
 {
@@ -61,8 +61,8 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
             }
 
             if (!$foundedKey) {
-                throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, null, [
-                    '%value%' => (string) $value,
+                throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, [
+                    '%value%' => (string) $choice,
                 ]);
             }
 
