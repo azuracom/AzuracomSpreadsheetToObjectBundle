@@ -24,14 +24,17 @@ class EntityTransformer implements DataTransformerInterface
 
     private $createCallback;
 
+    private $queryBuilderCallback;
+
     public function __construct(
         EntityRepository $repository,
         $property = null,
         ?callable $findCallback = null,
-        ?string $findMethod ='findAll',
+        ?string $findMethod = 'findAll',
         array $findArguments = [],
+        ?callable $queryBuilderCallback = null,
         bool $createIfNotFound = false,
-        ?callable $createCallback = null,
+        ?callable $createCallback = null
     ) {
         $this->repository = $repository;
         $this->property = $property;
@@ -40,6 +43,7 @@ class EntityTransformer implements DataTransformerInterface
         $this->findArguments = $findArguments;
         $this->createIfNotFound = $createIfNotFound;
         $this->createCallback = $createCallback;
+        $this->queryBuilderCallback = $queryBuilderCallback;
     }
 
     public function transform($value)
@@ -68,7 +72,7 @@ class EntityTransformer implements DataTransformerInterface
 
         $result = null;
         if ($this->findCallback) {
-            $result = call_user_func_array($this->findCallback, [$value,$this->repository]);
+            $result = call_user_func_array($this->findCallback, [$value, $this->repository]);
         } else {
             $this->iniItems();
             $key = self::toKey($value);
@@ -79,18 +83,17 @@ class EntityTransformer implements DataTransformerInterface
 
 
         if (!$result) {
-            if(!$this->createIfNotFound){
+            if (!$this->createIfNotFound) {
                 throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.entity", 0, null, null, [
                     '%value%' => $value
                 ]);
-            }else{
+            } else {
                 $className = $this->repository->getClassName();
                 $result = new $className();
-                if($this->createCallback){
-                    call_user_func_array($this->createCallback, [$result,$value,$this]);
+                if ($this->createCallback) {
+                    call_user_func_array($this->createCallback, [$result, $value, $this]);
                 }
             }
-
         }
 
         return $result;
@@ -99,7 +102,13 @@ class EntityTransformer implements DataTransformerInterface
     protected function iniItems()
     {
         if ($this->items === null) {
-            $results = call_user_func_array([$this->repository, $this->findMethod], $this->findArguments);
+
+            if ($cb = $this->queryBuilderCallback) {
+                $results = $cb($this->repository)->getQuery()->getResult();
+            } else {
+                $results = call_user_func_array([$this->repository, $this->findMethod], $this->findArguments);
+            }
+
             foreach ($results as $result) {
                 $this->items[self::toKey($this->getProperty($result))] = $result;
             }

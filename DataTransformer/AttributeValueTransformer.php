@@ -19,7 +19,7 @@ class AttributeValueTransformer implements DataTransformerInterface
         AttributeInterface $attribute,
         ?DataTransformerInterface $innerTransformer,
         string $defaultLocale,
-        bool $allowNullValue = false,
+        bool $allowNullValue = false
     ) {
         $this->defaultLocale = $defaultLocale;
         $this->factory = $factory;

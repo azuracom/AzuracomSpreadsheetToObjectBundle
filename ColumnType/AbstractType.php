@@ -102,8 +102,14 @@ abstract class AbstractType implements ColumnTypeInterface
             'row' => null,
             'column' => null,
             'cell' => null,
+            //apply styl on cell for export
             'cell_styles' => null,
+            //retrieve cell object for export
+            'cell_callback' => null,
+            //set column width for export
             'column_width' => null,
+            //set column comment for export
+            'column_comment' => null,
         ]);
 
         //validation
@@ -121,6 +127,7 @@ abstract class AbstractType implements ColumnTypeInterface
         $resolver->setAllowedTypes('transformation_error_code', ['int']);
         $resolver->setAllowedTypes('cell_styles', ['null', 'array', 'callable']);
         $resolver->setAllowedTypes('column_width', ['null', 'int']);
+        $resolver->setAllowedTypes('cell_callback', ['null', 'callable']);
 
         //normalize option
         $resolver->setNormalizer('setter', function (Options $options, $value) {

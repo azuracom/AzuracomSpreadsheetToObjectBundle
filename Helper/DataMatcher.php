@@ -39,6 +39,8 @@ class DataMatcher
         $uniqueId = $uniqueId ? $uniqueId : $this->currentUniqueId;
         $match = $this->formatKey($match, $this->currentType);
         $this->matches[$this->currentType][$matchKey][$match] = $this->currentUniqueId;
+
+        return $this;
     }
 
     public function guessUniqueKey(string $type, $data)
@@ -71,7 +73,6 @@ class DataMatcher
 
     public function findData(string $type, $matches)
     {
-        $matches = is_array($matches) ? $matches : [$matches];
         $key = $this->getDataKey($type, $matches);
         if ($key !== null) {
             return $this->getDataAtKey($type, $key);
@@ -98,8 +99,10 @@ class DataMatcher
         return $this;
     }
 
-    public function getDataKey(string $type, array $matches)
+    public function getDataKey(string $type, $matches)
     {
+        $matches = is_array($matches) ? $matches : [$matches];
+
         if (!isset($this->matches[$type])) {
             return null;
         }
@@ -123,7 +126,7 @@ class DataMatcher
 
     public function getDataAtKey(string $type, $key)
     {
-        return $this->datas[$type][$key];
+        return isset($this->datas[$type][$key]) ? $this->datas[$type][$key] : null;
     }
 
     public function getDatas()
@@ -178,5 +181,13 @@ class DataMatcher
         $this->keyFormatterCallback = $keyFormatterCallback;
 
         return $this;
+    }
+
+    /**
+     * Get the value of currentUniqueId
+     */
+    public function getCurrentUniqueId()
+    {
+        return $this->currentUniqueId;
     }
 }

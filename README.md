@@ -70,6 +70,7 @@ use Azuracom\SpreadsheetToObject\ColumnType\TextType;
 use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
 use Symfony\Component\Form\CallbackTransformer;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
 
 class OrderExportHandlerBuilder
 {
@@ -88,11 +89,13 @@ class OrderExportHandlerBuilder
             ->add('number', TextType::class, [
                 'label' => 'N°Commande', // label used by setSheetHeader NB: this value will be passed to translator
                 'column' => 'A' //if not setted, autoincremented from A each time ->add() is called
+                'column_width' => 50, //set the column width in pt
             ])
             //use "." to go in sub object
             ->add('customer.firstname', TextType::class, [
                 'label' => 'Prénom client',
-                'empty_data' => 'Indéfini' //value returned when data is null
+                'empty_data' => 'Indéfini', //value returned when data is null,
+                'column_comment' => "Cette colonne contient le nom du client", //use spreadsheetHandler->setSheetHeaderComments to apply
             ])
             //set column type relatively to the data sent
             ->add('shipped', BooleanType::class, [
@@ -108,6 +111,10 @@ class OrderExportHandlerBuilder
                                 ,
                         ]
                     ];
+                },
+                //access cell object directly
+                'cell_callback' => function(Cell $cell,$order,$columnType) {
+                    $cell->setHyperlink(/* just a sample */);
                 }
             ])
             ->add('total', MoneyType::class, [
@@ -194,7 +201,9 @@ class OrderController extends AbstractController
         $sheet->setTitle("Order export");
 
         //reuse label to auto set header
-        $spreadsheetHandler->setSheetHeader($sheet);
+        $spreadsheetHandler
+            ->setSheetHeader($sheet)
+            ->setSheetHeaderComments($sheet);
 
         $orders = $this->getDoctrine()->getRepository(Oder::class)->findAll();
         $rowNumber = 2;
@@ -462,6 +471,7 @@ namespace App\Spreadsheet\HandlerBuilder;
 use App\Entity\Product;
 use App\Entity\Seller;
 use Azuracom\SpreadsheetToObject\ColumnType\ColumnTypeInterface;
+use Azuracom\SpreadsheetToObject\ColumnType\ChoiceType;
 use Azuracom\SpreadsheetToObject\ColumnType\MoneyType;
 use Azuracom\SpreadsheetToObject\ColumnType\TextType;
 use Azuracom\SpreadsheetToObject\ColumnType\EntityType;
@@ -469,6 +479,7 @@ use Azuracom\SpreadsheetToObject\DataTransformer\EntityTransformer;
 use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
 use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Range;
 use Twig\Environment;
@@ -513,6 +524,18 @@ class ProductImportHandlerBuilder
                 'label' => 'Prix',
                 'help' => 'Montant minimum: 1€'
             ])
+            ->add('madeIn', ChoiceType::class, [
+                'label' => "Pays de fabrication",
+                //override default not found message:
+                'not_found_message' => 'Les pays possibles sont France et Belgique!'
+                'choices'=> [
+                    //valueInFile => valueInObject
+                    'France' => 'FR',
+                    'FR' => 'FR',
+                    'Belgique' => 'BE',
+                    'BE' => 'BE'
+                ]
+            ])
             ->add('description', TextType::class, [
                 //errors triggered by validator with this path will be mapped to this column
                 'error_match_path' => 'translations[fr].description',
@@ -532,6 +555,12 @@ class ProductImportHandlerBuilder
                 //define method to retrieve object
                 'find_method' => 'findBy' //default value is findAll,
                 'find_arguments' => [['code'=> $sellerCodes]] //for instance fetch only seller where codes are presents in current file
+                //or you can use a query builder
+                'query_builder' => function(EntityRepository $er) use ($sellerCodes) {
+                    return $er->createQueryBuilder('s')
+                        ->where('code IN (:codes)')
+                        ->setParameter('codes',$sellerCode)
+                },
 
                 //Sample with more advanced usage
                 'property' => function($seller) { //function recieve entity as first arguments
@@ -547,6 +576,14 @@ class ProductImportHandlerBuilder
                         'code' => $code,
                         'countryCode' => $countryCode,
                     ]);
+                }
+
+
+                //create new instance dynamically
+                'create_if_not_found' => true,
+                'create_callback' => function(Seller $newInstance, $code, $transformer) {
+                    $newInstance->setCode($code);
+                    $newInstance->setCreatedDynamically(true);
                 }
             ])
             ->setCurrentKey('variant')
