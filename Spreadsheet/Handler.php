@@ -146,6 +146,17 @@ class Handler implements \Iterator, HandlerInterface
         return $this;
     }
 
+    public function setSheetHeaderComments(Worksheet $sheet, int $rowNumber = 1): HandlerInterface
+    {
+        foreach ($this->columnTypes as $type) {
+            if ($comment = $type->getOption('column_comment')) {
+                $sheet->getComment($type->getColumn() . $rowNumber)->getText()->createText($comment);
+            }
+        }
+
+        return $this;
+    }
+
     public function setSheetRowContent(Worksheet $sheet, $data, ?int $rowNumber = null, ?string $key = null): HandlerInterface
     {
         if ($rowNumber) {
@@ -163,11 +174,16 @@ class Handler implements \Iterator, HandlerInterface
                 $coordinates = $type->getColumn() . $this->getTypeRow($type);
                 $type->resetValues();
                 $value = $type->getDataValue($data);
-                $sheet->setCellValue($coordinates, $value);
+                $cell = $sheet->getCell($coordinates);
+                $cell->setValue($value);
 
                 if ($styles = $type->getOption('cell_styles')) {
                     $styles = is_callable($styles) ? $styles($data, $value, $type) : $styles;
-                    $sheet->getCell($coordinates)->getStyle()->applyFromArray($styles);
+                    $cell->getStyle()->applyFromArray($styles);
+                }
+
+                if ($cb = $type->getOption('cell_callback')) {
+                    $cb($cell,$data, $type);
                 }
             }
         }
@@ -342,7 +358,7 @@ class Handler implements \Iterator, HandlerInterface
     }
 
     //iterator stuff
-    public function rewind() : void
+    public function rewind(): void
     {
         $this->position = 0;
     }
@@ -357,12 +373,12 @@ class Handler implements \Iterator, HandlerInterface
         return $this->position;
     }
 
-    public function next() : void
+    public function next(): void
     {
         ++$this->position;
     }
 
-    public function valid() : bool
+    public function valid(): bool
     {
         return isset($this->columnTypes[$this->position]);
     }
@@ -497,5 +513,17 @@ class Handler implements \Iterator, HandlerInterface
         $this->autoReset = $autoReset;
 
         return $this;
+    }
+
+    public function getLastColumn(): ?string
+    {
+        $column = null;
+        foreach ($this->columnTypes as $columnType) {
+            if ($column === null || $columnType->getColumn() > $column) {
+                $column = $columnType->getColumn();
+            }
+        }
+
+        return $column;
     }
 }

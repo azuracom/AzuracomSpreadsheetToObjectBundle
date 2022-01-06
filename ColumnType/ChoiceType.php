@@ -16,14 +16,17 @@ class ChoiceType extends AbstractType
 
         $resolver->setDefaults([
             'choices' => [],
+            'not_found_message' => "azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found",
         ]);
 
         $resolver->setAllowedTypes('choices','array');
+        $resolver->setAllowedTypes('not_found_message','string');
     }
 
     public function getDefaultTransformer($options): ?DataTransformerInterface
     {
         $choices = isset($options['choices']) ? $options['choices'] : [] ;
+        $message = $options['not_found_message'];
         return new CallbackTransformer(
             function($value) use ($choices){
                 if($value === null){
@@ -32,13 +35,13 @@ class ChoiceType extends AbstractType
 
                 return array_search($value,$choices);
             },
-            function($value) use ($choices) {
+            function($value) use ($choices,$message) {
                 if($value === null){
                     return null;
                 }
                 
                 if(!array_key_exists((string)$value,$choices)){
-                    throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, [
+                    throw new TransformationFailedException($message, 0, null, [
                         '%value%' => (string) $value,
                     ]);
                 }
