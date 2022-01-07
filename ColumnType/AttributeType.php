@@ -8,6 +8,7 @@ use Azuracom\SpreadsheetToObject\DataTransformer\BooleanTransformer;
 use Azuracom\SpreadsheetToObject\DataTransformer\ExcelDateTimeTransformer;
 use Azuracom\SpreadsheetToObject\DataTransformer\IntegerTransformer;
 use Azuracom\SpreadsheetToObject\DataTransformer\PercentTransformer;
+use Azuracom\SpreadsheetToObject\DataTransformer\StringTransformer;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Sylius\Component\Attribute\Model\AttributeInterface;
 use Sylius\Component\Attribute\Model\AttributeSubjectInterface;
@@ -16,6 +17,8 @@ use Sylius\Component\Attribute\AttributeType\DateAttributeType;
 use Sylius\Component\Attribute\AttributeType\DatetimeAttributeType;
 use Sylius\Component\Attribute\AttributeType\IntegerAttributeType;
 use Sylius\Component\Attribute\AttributeType\SelectAttributeType;
+use Sylius\Component\Attribute\AttributeType\TextareaAttributeType;
+use Sylius\Component\Attribute\AttributeType\TextAttributeType;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\OptionsResolver\Options;
@@ -52,7 +55,7 @@ abstract class AttributeType extends AbstractType
                 return function (AttributeSubjectInterface $subject, $value) use ($attribute) {
 
                     if ($attributeValue = $subject->getAttributeByCodeAndLocale($attribute->getCode(), $this->locale)) {
-                        if ($value!== null && $value->getValue() !== null) {
+                        if ($value !== null && $value->getValue() !== null) {
                             $attributeValue->setValue($value->getValue());
                         } else {
                             $subject->removeAttribute($attributeValue);
@@ -89,9 +92,9 @@ abstract class AttributeType extends AbstractType
             },
         ]);
 
-        $resolver->setAllowedTypes('allow_null_value','boolean');
-        $resolver->setAllowedTypes('date_format_code','string');
-        $resolver->setAllowedTypes('datetime_format_code','string');
+        $resolver->setAllowedTypes('allow_null_value', 'boolean');
+        $resolver->setAllowedTypes('date_format_code', 'string');
+        $resolver->setAllowedTypes('datetime_format_code', 'string');
         $resolver->setAllowedTypes('attribute', AttributeInterface::class);
         $resolver->setAllowedTypes('inner_transformer', DataTransformerInterface::class . '[]');
         $resolver->setRequired('attribute');
@@ -112,6 +115,9 @@ abstract class AttributeType extends AbstractType
                 return (new ExcelDateTimeTransformer());
             case SelectAttributeType::TYPE:
                 return (new AttributeValueSelectValueTransformer($attribute, $this->locale));
+            case TextareaAttributeType::TYPE:
+            case TextAttributeType::TYPE:
+                return (new StringTransformer());
         }
 
         return null;
@@ -124,6 +130,6 @@ abstract class AttributeType extends AbstractType
         $innerTransformer = isset($options['inner_transformer'][$attribute->getType()]) ?
             $options['inner_transformer'][$attribute->getType()] :
             $this->getDefaultInnerTransformer($attribute);
-        return new AttributeValueTransformer($this->factory, $attribute, $innerTransformer, $this->locale,$options['allow_null_value']);
+        return new AttributeValueTransformer($this->factory, $attribute, $innerTransformer, $this->locale, $options['allow_null_value']);
     }
 }
