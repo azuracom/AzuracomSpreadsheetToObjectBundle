@@ -11,6 +11,7 @@ use Azuracom\SpreadsheetToObject\Event\PostSetValuesEvent;
 use Azuracom\SpreadsheetToObject\Event\PreSetValueEvent;
 use Azuracom\SpreadsheetToObject\Event\PreSetValuesEvent;
 use Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Row;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -518,8 +519,11 @@ class Handler implements \Iterator, HandlerInterface
     public function getLastColumn(): ?string
     {
         $column = null;
+        $maxValue = 0;
         foreach ($this->columnTypes as $columnType) {
-            if ($column === null || $columnType->getColumn() > $column) {
+            $value = Coordinate::columnIndexFromString($columnType->getColumn());
+            if ($value > $maxValue) {
+                $maxValue = $value;
                 $column = $columnType->getColumn();
             }
         }
