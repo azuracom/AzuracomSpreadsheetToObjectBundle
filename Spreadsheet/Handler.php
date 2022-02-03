@@ -16,6 +16,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class Handler implements \Iterator, HandlerInterface
@@ -518,8 +519,11 @@ class Handler implements \Iterator, HandlerInterface
     public function getLastColumn(): ?string
     {
         $column = null;
+        $maxValue = 0;
         foreach ($this->columnTypes as $columnType) {
-            if ($column === null || $columnType->getColumn() > $column) {
+            $value = Coordinate::columnIndexFromString($columnType->getColumn());
+            if ($value > $maxValue) {
+                $maxValue = $value;
                 $column = $columnType->getColumn();
             }
         }
