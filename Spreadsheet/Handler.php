@@ -255,22 +255,22 @@ class Handler implements \Iterator, HandlerInterface
 
                 $oldValue = $type->getDataValue($data, false);
 
+                //validate conf contraints
+                $valueErrors = $this->validator->validate($newValue, $type->getOption('constraints'));
+                foreach ($valueErrors as $error) {
+                    $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
+                        '%row%' => $row,
+                        '%column%' => $column,
+                        '%error%' => $error->getMessage()
+                    ]);
+
+                    $this->errors[] = new Error($message, $error->getCode(), $row, $column);
+                }
+
                 if ($type->hasChanged($newValue, $oldValue)) {
                     if ($type->dataCanBeUpdated($data)) {
 
                         $type->setDataValue($data, $newValue);
-
-                        //validate conf contraints
-                        $valueErrors = $this->validator->validate($newValue, $type->getOption('constraints'));
-                        foreach ($valueErrors as $error) {
-                            $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                                '%row%' => $row,
-                                '%column%' => $column,
-                                '%error%' => $error->getMessage()
-                            ]);
-
-                            $this->errors[] = new Error($message, $error->getCode(), $row, $column);
-                        }
 
                         //reset old value
                         if (count($valueErrors)) {
