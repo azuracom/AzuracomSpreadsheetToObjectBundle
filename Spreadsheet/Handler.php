@@ -46,9 +46,6 @@ class Handler implements \Iterator, HandlerInterface
     protected $currentKey = 'default';
 
     /** @var boolean */
-    protected $columnWidthSetted = false;
-
-    /** @var boolean */
     protected $trackChanges = false;
 
     /** @var boolean */
@@ -158,6 +155,17 @@ class Handler implements \Iterator, HandlerInterface
         return $this;
     }
 
+    public function setSheetColumnWidth(Worksheet $sheet): HandlerInterface
+    {
+        foreach ($this->columnTypes as $type) {
+            if ($width = $type->getOption('column_width')) {
+                $sheet->getColumnDimension($type->getColumn())->setWidth($width, 'pt');
+            }
+        }
+
+        return $this;
+    }
+
     public function setSheetRowContent(Worksheet $sheet, $data, ?int $rowNumber = null, ?string $key = null): HandlerInterface
     {
         if ($rowNumber) {
@@ -167,9 +175,6 @@ class Handler implements \Iterator, HandlerInterface
         $key = $key ?? $this->getCurrentKey();
 
         foreach ($this->columnTypes as $type) {
-            if (!$this->columnWidthSetted && $type->getOption('column_width')) {
-                $sheet->getColumnDimension($type->getColumn())->setWidth($type->getOption('column_width'), 'pt');
-            }
 
             if ($type->isDataMapped($data, $key)) {
                 $coordinates = $type->getColumn() . $this->getTypeRow($type);
@@ -184,12 +189,10 @@ class Handler implements \Iterator, HandlerInterface
                 }
 
                 if ($cb = $type->getOption('cell_callback')) {
-                    $cb($cell,$data, $type);
+                    $cb($cell, $data, $type);
                 }
             }
         }
-
-        $this->columnWidthSetted = true;
 
         return $this;
     }
@@ -241,6 +244,7 @@ class Handler implements \Iterator, HandlerInterface
             }
 
             $column = $type->getColumn();
+            $columnLabel = $type->getOption('label');
             $row = $this->getTypeRow($type);
 
             //try to catch transformer exception            
@@ -262,6 +266,7 @@ class Handler implements \Iterator, HandlerInterface
                     $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
                         '%row%' => $row,
                         '%column%' => $column,
+                        '%column_label%' => $columnLabel,
                         '%error%' => $error->getMessage()
                     ]);
 
@@ -285,6 +290,7 @@ class Handler implements \Iterator, HandlerInterface
                         $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.value_not_editable", [
                             '%row%' => $row,
                             '%column%' => $column,
+                            '%column_label%' => $columnLabel,
                         ]);
 
                         $this->errors[] = new Error($message, self::NOT_EDITABLE_CODE, $row, $column);
@@ -299,6 +305,7 @@ class Handler implements \Iterator, HandlerInterface
                 $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
                     '%row%' => $row,
                     '%column%' => $column,
+                    '%column_label%' => $columnLabel,
                     '%error%' => $error
                 ]);
 
@@ -331,10 +338,12 @@ class Handler implements \Iterator, HandlerInterface
                 if ($type->getName() == $name || ($errorMatchPath && preg_match("#$errorMatchPath#", $name))) {
                     $row = $this->getTypeRow($type);
                     $column = $type->getColumn();
+                    $columnLabel = $type->getOption('label');
 
                     $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
                         '%row%' => $row,
                         '%column%' => $column,
+                        '%column_label%' => $columnLabel,
                         '%error%' =>  $error->getMessage()
                     ]);
                     break;
@@ -442,25 +451,6 @@ class Handler implements \Iterator, HandlerInterface
         return false;
     }
 
-    /**
-     * Get the value of columnWidthSetted
-     */
-    public function getColumnWidthSetted(): bool
-    {
-        return $this->columnWidthSetted;
-    }
-
-    /**
-     * Set the value of columnWidthSetted
-     *
-     * @return  self
-     */
-    public function setColumnWidthSetted(bool $columnWidthSetted): HandlerInterface
-    {
-        $this->columnWidthSetted = $columnWidthSetted;
-
-        return $this;
-    }
 
     /**
      * Get the value of trackChanges

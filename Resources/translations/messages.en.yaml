@@ -9,6 +9,6 @@ azuracom_spreadsheet_to_object:
         choice_value_not_found: Value %value% is not in the presetted list
         attribute_value_multiple_not_allowed: Only one value is allowed for this field
     row_handler:
-        error_at_column: 'Row %row% column %column% : %error%'
-        error_at_property: 'Row %row% property %property% : %error%'
+        error_at_column: 'Row %row% column %column% %column_label% : %error%'
+        error_at_property: 'Row %row% property %property% %column_label% : %error%'
         value_not_editable: 'Row %row% column %column% : This property is not editable'

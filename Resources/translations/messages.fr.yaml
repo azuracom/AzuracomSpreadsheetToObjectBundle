@@ -9,6 +9,6 @@ azuracom_spreadsheet_to_object:
         choice_value_not_found: Valeur %value% n'est pas dans la liste prédéfinie
         attribute_value_multiple_not_allowed: Une seule valeur est permise pour ce champ
     row_handler:
-        error_at_column: 'Ligne %row% colonne %column% : %error%'
-        error_at_property: 'Ligne %row% propriété %property% : %error%'
+        error_at_column: 'Ligne %row% colonne %column% %column_label% : %error%'
+        error_at_property: 'Ligne %row% propriété %property% %column_label% : %error%'
         value_not_editable: "Ligne %row% colonne %column% : cete valeur n'est pas modifiable"
