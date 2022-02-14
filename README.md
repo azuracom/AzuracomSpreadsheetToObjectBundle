@@ -203,6 +203,7 @@ class OrderController extends AbstractController
         //reuse label to auto set header
         $spreadsheetHandler
             ->setSheetHeader($sheet)
+            ->setSheetColumnWidth($sheet)
             ->setSheetHeaderComments($sheet);
 
         $orders = $this->getDoctrine()->getRepository(Oder::class)->findAll();

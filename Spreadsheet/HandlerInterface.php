@@ -23,8 +23,7 @@ interface HandlerInterface
     public function hasError(): bool;
     public function hasChanged(): bool;
     public function hasKey($key): bool;
-    public function getColumnWidthSetted(): bool;
-    public function setColumnWidthSetted(bool $columnWidthSetted): HandlerInterface;
+    public function setSheetColumnWidth(Worksheet $sheet): HandlerInterface;
     public function getTrackChanges(): bool;
     public function setTrackChanges(bool $trackChanges): HandlerInterface;
     public function resetChanges(): HandlerInterface;
