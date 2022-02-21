@@ -222,7 +222,7 @@ class Handler implements \Iterator, HandlerInterface
         return null;
     }
 
-    public function setDataValues($data, ?array $validationGroups = null, ?string $key = null): HandlerInterface
+    public function setDataValues(&$data, ?array $validationGroups = null, ?string $key = null): HandlerInterface
     {
         $key = $key ?? $this->getCurrentKey();
         if ($this->autoReset) {

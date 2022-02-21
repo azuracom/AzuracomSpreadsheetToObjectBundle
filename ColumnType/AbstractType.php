@@ -242,7 +242,7 @@ abstract class AbstractType implements ColumnTypeInterface
         return $value;
     }
 
-    public function setDataValue($data, $value)
+    public function setDataValue(&$data, $value)
     {
         $setter = $this->getOption('setter');
         if ($setter === false) {
