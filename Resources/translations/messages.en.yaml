@@ -3,10 +3,10 @@ azuracom_spreadsheet_to_object:
         boolean: 'Accepted value(s) for yes: %true_values% - Accepted value(s) for no: %false_values%'
         datetime: This value is not a valid date
         decimal: This value is not a valid number
-        entity: Value %value% not found
+        entity: Value "%value%" not found
         integer: This value is not a valid integer
         excel_datetime: This value is not a valid date
-        choice_value_not_found: Value %value% is not in the presetted list
+        choice_value_not_found: Value "%value%" is not in the presetted list%values%
         attribute_value_multiple_not_allowed: Only one value is allowed for this field
     row_handler:
         error_at_column: 'Row %row% column %column% %column_label% : %error%'

@@ -22,7 +22,7 @@ interface ColumnTypeInterface
     public function dataCanBeUpdated($data): bool;
     public function isDataMapped($data, string $key): bool;
     public function getDataValue($data, bool $transformed = true);
-    public function setDataValue($data, $value);
+    public function setDataValue(&$data, $value);
     public function hasChanged($newValue, $oldValue): bool;
     public function hasChangedInner($newValue, $oldValue): bool;
     public function getOwner(): ?HandlerInterface;

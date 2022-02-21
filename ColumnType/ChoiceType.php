@@ -2,14 +2,12 @@
 
 namespace Azuracom\SpreadsheetToObject\ColumnType;
 
-use Symfony\Component\Form\CallbackTransformer;
+use Azuracom\SpreadsheetToObject\DataTransformer\ChoiceTransformer;
 use Symfony\Component\Form\DataTransformerInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ChoiceType extends AbstractType
 {
-
     public function configureOptions(OptionsResolver $resolver)
     {
         parent::configureOptions($resolver);
@@ -17,37 +15,23 @@ class ChoiceType extends AbstractType
         $resolver->setDefaults([
             'choices' => [],
             'not_found_message' => "azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found",
+            'not_found_message_show_values' => true,
+            'case_sensitive' => true,
         ]);
 
         $resolver->setAllowedTypes('choices', 'array');
         $resolver->setAllowedTypes('not_found_message', 'string');
+        $resolver->setAllowedTypes('not_found_message_show_values', 'boolean');
+        $resolver->setAllowedTypes('case_sensitive', 'boolean');
     }
 
     public function getDefaultTransformer($options): ?DataTransformerInterface
     {
-        $choices = isset($options['choices']) ? $options['choices'] : [];
-        $message = $options['not_found_message'];
-        return new CallbackTransformer(
-            function ($value) use ($choices) {
-                if ($value === null) {
-                    return null;
-                }
-
-                return array_search($value, $choices);
-            },
-            function ($value) use ($choices, $message) {
-                if ($value === null) {
-                    return null;
-                }
-
-                if (!array_key_exists((string)$value, $choices)) {
-                    throw new TransformationFailedException($message, 0, null, null, [
-                        '%value%' => (string) $value,
-                    ]);
-                }
-
-                return $choices[(string)$value];
-            }
+        return new ChoiceTransformer(
+            $options['choices'],
+            $options['not_found_message'],
+            $options['not_found_message_show_values'],
+            $options['case_sensitive']
         );
     }
 }

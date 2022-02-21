@@ -13,7 +13,7 @@ class BooleanTransformer implements DataTransformerInterface
     /** @var array */
     private $falseValues;
 
-    public function __construct(array $trueValues = [1, '1', 'yes', 'y'], array $falseValues = [0, '0', 'no', 'n'])
+    public function __construct(array $trueValues, array $falseValues)
     {
         if (count($trueValues) === 0 || count($falseValues) === 0) {
             throw new \LogicException("True values and false values should countains at least one element");

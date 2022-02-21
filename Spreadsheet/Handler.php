@@ -221,7 +221,7 @@ class Handler implements \Iterator, HandlerInterface
         return null;
     }
 
-    public function setDataValues($data, ?array $validationGroups = null, ?string $key = null): HandlerInterface
+    public function setDataValues(&$data, ?array $validationGroups = null, ?string $key = null): HandlerInterface
     {
         $key = $key ?? $this->getCurrentKey();
         if ($this->autoReset) {
@@ -273,9 +273,8 @@ class Handler implements \Iterator, HandlerInterface
 
                 if ($type->hasChanged($newValue, $oldValue)) {
                     if ($type->dataCanBeUpdated($data)) {
-
                         $type->setDataValue($data, $newValue);
-
+                        
                         //reset old value
                         if (count($valueErrors)) {
                             $type->setDataValue($data, $oldValue);
