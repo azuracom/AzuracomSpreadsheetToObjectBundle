@@ -59,10 +59,13 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
             $foundedKey = null;
             $values = [];
             foreach ($choices as $key => $tmpChoice) {
-                $values[] = $tmpChoice[$this->defaultLocale];
-                if (isset($tmpChoice[$this->defaultLocale]) && trim($choice) == $tmpChoice[$this->defaultLocale]) {
-                    $foundedKey = $key;
-                    break;
+                if (isset($tmpChoice[$this->defaultLocale])) {
+                    $values[] = $tmpChoice[$this->defaultLocale];
+                    if(trim($choice) == $tmpChoice[$this->defaultLocale]){
+                        $foundedKey = $key;
+                        break;
+                    }
+
                 }
             }
 
