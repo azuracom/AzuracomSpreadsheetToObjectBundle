@@ -104,7 +104,7 @@ abstract class AttributeType extends AbstractType
     {
         switch ($attribute->getType()) {
             case CheckboxAttributeType::TYPE:
-                return (new BooleanTransformer());
+                return (new BooleanTransformer(['yes'], ['no']));
             case IntegerAttributeType::TYPE:
                 return (new IntegerTransformer());
             case IntegerAttributeType::TYPE:
