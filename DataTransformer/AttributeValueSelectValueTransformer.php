@@ -57,16 +57,21 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
 
         foreach (explode($this->choiceSeparator, $value) as $choice) {
             $foundedKey = null;
+            $values = [];
             foreach ($choices as $key => $tmpChoice) {
-                if (isset($tmpChoice[$this->defaultLocale]) && trim($choice) == $tmpChoice[$this->defaultLocale]) {
-                    $foundedKey = $key;
-                    break;
+                if (isset($tmpChoice[$this->defaultLocale])) {
+                    $values[] = $tmpChoice[$this->defaultLocale];
+                    if(trim($choice) == $tmpChoice[$this->defaultLocale]){
+                        $foundedKey = $key;
+                        break;
+                    }
                 }
             }
 
             if (!$foundedKey) {
                 throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, null, [
                     '%value%' => (string) $choice,
+                    '%values%' => ": " . implode(', ', $values),
                 ]);
             }
 
