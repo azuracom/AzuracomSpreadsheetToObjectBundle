@@ -15,7 +15,7 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
     private $defaultLocale;
     private $caseSensitive;
 
-    public function __construct(AttributeInterface $attribute, $defaultLocale, $choiceSeparator = ',', $caseSensitive = true)
+    public function __construct(AttributeInterface $attribute, $defaultLocale, $choiceSeparator = ',', $caseSensitive = false)
     {
         if ($attribute->getType() !== SelectAttributeType::TYPE) {
             throw new \LogicException(sprintf("Attribute should be of type %s", SelectAttributeType::TYPE));
