@@ -13,8 +13,9 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
     private $attribute;
     private $choiceSeparator;
     private $defaultLocale;
+    private $caseSensitive;
 
-    public function __construct(AttributeInterface $attribute, $defaultLocale, $choiceSeparator = ',')
+    public function __construct(AttributeInterface $attribute, $defaultLocale, $choiceSeparator = ',', $caseSensitive = true)
     {
         if ($attribute->getType() !== SelectAttributeType::TYPE) {
             throw new \LogicException(sprintf("Attribute should be of type %s", SelectAttributeType::TYPE));
@@ -22,6 +23,7 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
         $this->attribute = $attribute;
         $this->choiceSeparator = $choiceSeparator;
         $this->defaultLocale = $defaultLocale;
+        $this->caseSensitive = $caseSensitive;
     }
 
     public function transform($value)
@@ -58,10 +60,15 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
         foreach (explode($this->choiceSeparator, $value) as $choice) {
             $foundedKey = null;
             $values = [];
+            $choiceValue = $this->caseSensitive ? $choice : strtolower($choice);
+
             foreach ($choices as $key => $tmpChoice) {
                 if (isset($tmpChoice[$this->defaultLocale])) {
-                    $values[] = $tmpChoice[$this->defaultLocale];
-                    if(trim($choice) == $tmpChoice[$this->defaultLocale]){
+                    $tmpChoiceValue = $tmpChoice[$this->defaultLocale];
+                    $values[] = $tmpChoiceValue;
+                    $tmpChoiceValue = $this->caseSensitive ? $tmpChoiceValue : strtolower($tmpChoiceValue);
+
+                    if(trim($choiceValue) == $tmpChoiceValue){
                         $foundedKey = $key;
                         break;
                     }
