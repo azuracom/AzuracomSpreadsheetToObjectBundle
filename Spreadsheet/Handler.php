@@ -150,6 +150,10 @@ class Handler implements \Iterator, HandlerInterface
             if ($comment = $type->getOption('column_comment')) {
                 $sheet->getComment($type->getColumn() . $rowNumber)->getText()->createText($comment);
             }
+            
+            if (($width = $type->getOption('column_comment_width')) !== null) {
+                $sheet->getComment($type->getColumn() . $rowNumber)->setWidth($width . 'pt');
+            }
         }
 
         return $this;
