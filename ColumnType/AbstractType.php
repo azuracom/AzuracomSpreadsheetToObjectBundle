@@ -110,6 +110,7 @@ abstract class AbstractType implements ColumnTypeInterface
             'column_width' => null,
             //set column comment for export
             'column_comment' => null,
+            'column_comment_width' => null,
         ]);
 
         //validation
@@ -127,7 +128,8 @@ abstract class AbstractType implements ColumnTypeInterface
         $resolver->setAllowedTypes('transformation_error_code', ['int']);
         $resolver->setAllowedTypes('cell_styles', ['null', 'array', 'callable']);
         $resolver->setAllowedTypes('column_width', ['null', 'int']);
-        $resolver->setAllowedTypes('column_width', ['null', 'string']);
+        $resolver->setAllowedTypes('column_comment', ['null', 'string']);
+        $resolver->setAllowedTypes('column_comment_width', ['null', 'int']);
         $resolver->setAllowedTypes('cell_callback', ['null', 'callable']);
 
         //normalize option
