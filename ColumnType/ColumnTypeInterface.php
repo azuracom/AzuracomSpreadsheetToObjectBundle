@@ -19,7 +19,7 @@ interface ColumnTypeInterface
     public function getValue($transformation = 'reverseTransform');
     public function setValue($value): self;
     public function getDefaultTransformer($options): ?DataTransformerInterface;
-    public function dataCanBeUpdated($data): bool;
+    public function dataCanBeUpdated($data, $newValue, $oldValue): bool;
     public function isDataMapped($data, string $key): bool;
     public function getDataValue($data, bool $transformed = true);
     public function setDataValue(&$data, $value);
@@ -30,5 +30,5 @@ interface ColumnTypeInterface
     public function addTransformer(DataTransformerInterface $transformer, $forceAppend = false): self;
     public function resetModelTransformers(): self;
     public static function getPrefix(): string;
-    public function resetValues() : self;
+    public function resetValues(): self;
 }

@@ -9,6 +9,7 @@ class DataMatcher
     protected $keyFormatterCallback;
     protected $currentUniqueId = null;
     protected $currentType = null;
+    protected $adder = array();
 
     public function reset($types = null)
     {
@@ -189,5 +190,15 @@ class DataMatcher
     public function getCurrentUniqueId()
     {
         return $this->currentUniqueId;
+    }
+
+    public function createAdder(string $type, callable $callable)
+    {
+        $this->adder[$type] = $callable;
+    }
+
+    public function getAdder($type)
+    {
+        return isset($this->adder[$type]) ? $this->adder[$type] : null;
     }
 }

@@ -83,6 +83,8 @@ abstract class AbstractType implements ColumnTypeInterface
             'getter' => null,
             //set if the data value can be updated
             'allow_update' => true,
+            //Add an error if allow_update = false and data has changer
+            'allow_update_error' => false,
             //Add constraint to validate transformed value
             'constraints' => [],
             //add regex to add error on this config
@@ -119,6 +121,7 @@ abstract class AbstractType implements ColumnTypeInterface
         $resolver->setAllowedTypes('getter', ['null', 'string', 'array', 'callable', 'boolean']);
         $resolver->setAllowedTypes('constraints', [Constraint::class . '[]']);
         $resolver->setAllowedTypes('allow_update', ['boolean', 'callable']);
+        $resolver->setAllowedTypes('allow_update_error', ['boolean']);
         $resolver->setAllowedTypes('error_match_path', ['string', 'null']);
         $resolver->setAllowedTypes('help', ['string', 'null']);
         $resolver->setAllowedTypes('has_changed_callback', ['null', 'callable']);
@@ -250,6 +253,7 @@ abstract class AbstractType implements ColumnTypeInterface
         if ($setter === false) {
             return;
         }
+
         switch ($this->setterType) {
             case self::ACCESSOR_DEFAULT:
                 $this->propertyAccessor->setValue($data, $setter, $value);
@@ -289,10 +293,10 @@ abstract class AbstractType implements ColumnTypeInterface
         return $this->getOption('label', $this->getName());
     }
 
-    public function dataCanBeUpdated($data): bool
+    public function dataCanBeUpdated($data, $newValue, $oldValue): bool
     {
         $allowUpdate = $this->getOption('allow_update');
-        return is_bool($allowUpdate) ? $allowUpdate : $allowUpdate($data);
+        return is_bool($allowUpdate) ? $allowUpdate : $allowUpdate($data, $newValue, $oldValue);
     }
 
     /**
@@ -365,7 +369,7 @@ abstract class AbstractType implements ColumnTypeInterface
                 }
             }
         }
-        
+
         return $value === null ? $this->getOption('empty_data') : $value;
     }
 
@@ -452,7 +456,7 @@ abstract class AbstractType implements ColumnTypeInterface
         return $this;
     }
 
-    public function resetValues() : ColumnTypeInterface
+    public function resetValues(): ColumnTypeInterface
     {
         $this->value = null;
         $this->transformedValue = null;

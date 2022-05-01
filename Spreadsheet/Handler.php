@@ -276,7 +276,7 @@ class Handler implements \Iterator, HandlerInterface
                 }
 
                 if ($type->hasChanged($newValue, $oldValue)) {
-                    if ($type->dataCanBeUpdated($data)) {
+                    if ($type->dataCanBeUpdated($data, $newValue, $oldValue)) {
                         $type->setDataValue($data, $newValue);
                         
                         //reset old value
@@ -287,7 +287,7 @@ class Handler implements \Iterator, HandlerInterface
                             $newStringValue = $type->getValue(null);
                             $this->changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
                         }
-                    } else {
+                    } elseif($type->getOption('allow_update_error')) {
                         $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.value_not_editable", [
                             '%row%' => $row,
                             '%column%' => $column,
