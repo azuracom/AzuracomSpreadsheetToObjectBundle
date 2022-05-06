@@ -43,7 +43,7 @@ class EntityType extends AbstractType
 
     public function getDefaultTransformer($options): ?DataTransformerInterface
     {
-        return new EntityTransformer(
+        $transformer = new EntityTransformer(
             $this->em->getRepository($options['class']),
             $options['property'],
             $options['find_callback'],
@@ -53,6 +53,9 @@ class EntityType extends AbstractType
             $options['create_if_not_found'],
             $options['create_callback']
         );
+        $transformer->setColumnType($this);
+
+        return $transformer;
     }
 
     public function hasChangedInner($newValue, $oldValue): bool

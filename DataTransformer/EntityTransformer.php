@@ -2,6 +2,7 @@
 
 namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
+use Azuracom\SpreadsheetToObject\ColumnType\ColumnTypeInterface;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
@@ -25,6 +26,8 @@ class EntityTransformer implements DataTransformerInterface
     private $createCallback;
 
     private $queryBuilderCallback;
+
+    private $columnType;
 
     public function __construct(
         EntityRepository $repository,
@@ -72,7 +75,7 @@ class EntityTransformer implements DataTransformerInterface
 
         $result = null;
         if ($this->findCallback) {
-            $result = call_user_func_array($this->findCallback, [$value, $this->repository]);
+            $result = call_user_func_array($this->findCallback, [$value, $this->repository, $this]);
         } else {
             $this->iniItems();
             $key = self::toKey($value);
@@ -118,5 +121,18 @@ class EntityTransformer implements DataTransformerInterface
     public static function toKey($value)
     {
         return trim(strtolower($value));
+    }
+
+    public function getColumnType(): ?ColumnTypeInterface
+    {
+        return $this->columnType;
+    }
+
+
+    public function setColumnType(?ColumnTypeInterface $columnType = null): self
+    {
+        $this->columnType = $columnType;
+
+        return $this;
     }
 }
