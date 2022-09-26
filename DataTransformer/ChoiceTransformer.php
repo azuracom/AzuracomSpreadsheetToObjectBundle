@@ -49,7 +49,7 @@ class ChoiceTransformer implements DataTransformerInterface
             }
         }
 
-        throw new TransformationFailedException($this->notFoundMessage, 0, null, null, [
+        throw new TransformationFailedException($this->notFoundMessage, 0, null,[
             '%value%' => (string) $value,
             '%values%' => $this->notFoundMessageShowValues ? ': "' . implode('", "', array_keys($this->choices)) . '"' : '',
         ]);
