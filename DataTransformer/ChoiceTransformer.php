@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObject\DataTransformer;
 
 use Symfony\Component\Form\DataTransformerInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
+use Azuracom\SpreadsheetToObject\Exception\TransformationFailedException;
 
 class ChoiceTransformer implements DataTransformerInterface
 {
