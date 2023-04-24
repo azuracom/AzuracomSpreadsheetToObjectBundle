@@ -6,6 +6,7 @@ use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnCheckboxType;
 use Azuracom\SpreadsheetToObject\Registry\ColumnTypeRegistry;
 use Azuracom\SpreadsheetToObject\Spreadsheet\Handler;
 use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -27,6 +28,8 @@ class HandlerFactory implements HandlerFactoryInterface
 
     /** @var  EventDispatcherInterface */
     protected $dispatcher;
+
+    protected $columnIndex;
 
     public function __construct(
         ColumnTypeRegistry $registry,
@@ -52,23 +55,52 @@ class HandlerFactory implements HandlerFactoryInterface
         return $handler;
     }
 
-    public function createFromForm(FormInterface $form): HandlerInterface
+    public function createFromForm(FormInterface $form, bool $selectAllWhenEmpty = true): HandlerInterface
     {
         $handler = $this->create();
-        $this->iterateOnFormR($form, $handler);
+        $forceSelected =  $this->isEmpty($form) && $selectAllWhenEmpty;
+        $this->columnIndex = 1;
+        $this->iterateOnFormR($form, $handler, $forceSelected);
         return $handler;
     }
 
-    private function iterateOnFormR(FormInterface $form, HandlerInterface $handler)
+    private function isEmpty(FormInterface $form): bool
     {
         foreach ($form->all() as $field) {
             if ($field->count()) {
-                $this->iterateOnFormR($field, $handler);
+                $res = $this->isEmpty($field);
+                if($res === false) {
+                    return false;
+                }
             }
 
             if ($field->getConfig()->getType()->getInnerType() instanceof ExportColumnCheckboxType && $field->get('selected')->getData()) {
+                return false;
+            }
+        }
 
-                $column = $field->get('column')->getData();
+        return true;
+    }
+
+    private function iterateOnFormR(FormInterface $form, HandlerInterface $handler, bool $forceSelected)
+    {
+        foreach ($form->all() as $field) {
+            if ($field->count()) {
+                $this->iterateOnFormR($field, $handler, $forceSelected);
+            }
+
+            if (
+                $field->getConfig()->getType()->getInnerType() instanceof ExportColumnCheckboxType && 
+                ($field->get('selected')->getData() || $forceSelected)
+            ) {
+
+                if($forceSelected) {
+                    $column = Coordinate::stringFromColumnIndex($this->columnIndex);
+                    $this->columnIndex++;
+                }else{
+                    $column = $field->get('column')->getData();
+                }
+
                 $fieldOptions = $field->getConfig()->getOptions();
                 $options = $fieldOptions['column_options'];
                 $options['label'] = $fieldOptions['label'];

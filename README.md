@@ -239,6 +239,12 @@ class OrderController extends AbstractController
 
 ## Use as export with user choice column
 
+Make sure that stimulus is supported by your application with typescript and install sortablejs
+
+```console
+yarn add sortablejs
+```
+
 1. Create forms type
 
 ```php
@@ -419,42 +425,250 @@ class ProductController extends AbstractController
 }
 ```
 
-3. Add form theme
+3. Create the stimulus controller
 
-```yaml
-#config/packages/twig.yaml
-twig:
-    form_themes:
-        - '@AzuracomSpreadsheetToObject/form.html.twig' 
+```js
+// assets/controllers/spreadsheet-column-conf_controller.ts
+
+import { Controller } from '@hotwired/stimulus';
+import Sortable from "sortablejs";
+
+/*
+* The following line makes this controller "lazy": it won't be downloaded until needed
+* See https://github.com/symfony/stimulus-bridge#lazy-controllers
+*/
+/* stimulusFetch: 'lazy' */
+export default class extends Controller {
+    declare readonly columnSelectorTargets: HTMLFormElement[];
+    declare readonly selectedColumnsTarget: HTMLFormElement;
+    declare readonly columnIndexesTarget: HTMLFormElement;
+    declare sortable: Sortable;
+
+    static targets = ['columnSelector', 'selectedColumns', 'columnIndexes'];
+
+    connect(): void {
+        this.sortable = Sortable.create(this.selectedColumnsTarget, {
+            // Spécifiez que les éléments `li` sont les éléments pouvant être déplacés
+            handle: "li",
+            ghostClass: 'sortable-ghost',
+            // Définir la fonction `onUpdate` qui se déclenchera lorsque la liste sera modifiée
+            onUpdate: () => {
+                this.updateColumnIndex()
+            }
+        });
+
+        //init selected columns
+        var items = [];
+        this.columnSelectorTargets.forEach(columnSelector => {
+            const inputValue = this.getColumnSelectorInput(columnSelector, 'value');
+            const inputCheckbox = this.getColumnSelectorInput(columnSelector, 'checkbox');
+
+            if (!inputCheckbox.checked) {
+                return;
+            }
+
+            items.push({
+                columnIndex: inputValue.value,
+                input: inputCheckbox,
+            })
+
+        });
+
+        items.sort((a: any, b: any): number => {
+            return a.columnIndex > b.columnIndex ? 1 : -1;
+        });
+
+        items.forEach((item) => {
+            this.addSelectedColumn(item.input);
+        })
+    }
+
+    disconnect(): void {
+        this.sortable.destroy();
+    }
+
+    columnSelectorTargetConnected = (columnSelector: HTMLElement) => {
+        const input = this.getColumnSelectorInput(columnSelector, 'checkbox');
+        input.addEventListener('change', this.toggleSelectedColumn);
+    }
+
+    columnSelectorTargetDisconnected = (columnSelector: HTMLElement) => {
+        const input = this.getColumnSelectorInput(columnSelector, 'checkbox');
+        input.removeEventListener('change', this.toggleSelectedColumn);
+    }
+
+    toggleGroup = (event: any): void => {
+        const container = document.querySelector(event.params.container);
+        container.querySelectorAll('input[type=checkbox]').forEach(input => {
+            input.checked = event.target.checked;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+    }
+
+    toggleSelectedColumn = (event: any): void => {
+
+        const input = event.target;
+
+        if (input.checked) {
+            this.addSelectedColumn(input)
+        } else {
+            const columnSelector = event.target.closest('[data-spreadsheet-column-conf-target=columnSelector]');
+            const selectedColumn = this.selectedColumnsTarget.querySelector(`[data-id='${columnSelector.id}']`);
+            if (selectedColumn) {
+                selectedColumn.remove();
+            }
+        }
+
+        this.updateColumnIndex();
+    }
+
+    addSelectedColumn = (input: HTMLInputElement) => {
+        const columnSelector = input.closest('[data-spreadsheet-column-conf-target=columnSelector]');
+        const html = this.selectedColumnsTarget.dataset.elementWidget
+            .replace('__label__', document.querySelector(`label[for='${input.id}']`).innerHTML)
+            .replace('__id__', columnSelector.id);
+        this.selectedColumnsTarget.insertAdjacentHTML('beforeend', html);
+    }
+
+    unselectColumn = (event: any): void => {
+        const selectedColumn = event.target.closest('li');
+        const columnSelector = document.querySelector(`#${selectedColumn.dataset.id}`)
+        const input = this.getColumnSelectorInput(columnSelector, 'checkbox');
+        input.checked = false;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        selectedColumn.remove();
+        this.updateColumnIndex();
+    }
+
+    updateColumnIndex = (): void => {
+        //loop over all column selector
+        this.columnSelectorTargets.forEach(columnSelector => {
+            const columnInput = this.getColumnSelectorInput(columnSelector, 'value');
+            const selectedColumn = this.selectedColumnsTarget.querySelector(`[data-id='${columnSelector.id}']`);
+
+            //if a selected column exist
+            if (selectedColumn) {
+                //retrieve the corresponding columnIndex
+                const index = Array.from(selectedColumn.parentNode.children).indexOf(selectedColumn);
+                const columnIndex: any = this.columnIndexesTarget.children[index];
+                const value = columnIndex.innerHTML;
+                columnInput.value = value;
+            }
+            //vlear value
+            else {
+                columnInput.value = '';
+            }
+        })
+
+    }
+
+    getColumnSelectorInput = (columnSelector: HTMLElement | Element, type: string): HTMLInputElement => {
+        return type === 'checkbox' ?
+            columnSelector.querySelector('input[type=checkbox]') :
+            columnSelector.querySelector('input[type=hidden]');
+    }
+}
 ```
 
-4. Create the view
+4. Configure fields
 
-```html
-{# template/product/export.html.twig #}
-{# layout should have both jquery and jquery ui scripts ! #}
+```twig
+{# templates/form/fields.html.twig #}
+{% block export_column_checkbox_row %}
+	<div  
+        id="{{ form.vars.id }}"
+        data-spreadsheet-column-conf-target="columnSelector"
+    >
+		{{ form_row(form.selected, {row_attr: {class: 'mb-1'}}) }}
+        {{ form_widget(form.column) }}
+	</div>
+{% endblock %}
 
-{% extends "layout.html.twig" %}
+
+{% block export_column_group_row %}
+
+	<div id="{{ form.vars.id }}">
+		{{ form_row(form.check, {attr:{
+            'data-action': 'spreadsheet-column-conf#toggleGroup',
+            'data-spreadsheet-column-conf-container-param': '#' ~ form.vars.id ~ '_container'    
+        }}) }}
+
+		<ul class="list-unstyled ps-4" id="{{ form.vars.id }}_container">
+			{% for field in form.children %}
+				<li>{{ form_row(field) }}</li>
+			{% endfor %}
+		</ul>
+	</div>
+{% endblock %}
+```
+
+don't forget to configure your form theme
+
+```yaml
+# config/packages/twig.yaml
+twig:
+    form_themes:
+        - 'form/fields.html.twig' 
+```
+
+4. Create your template
+
+
+
+```twig
+{% extends 'layout.html.twig' %}
+
+
+{% macro selectedColumnItem() %}
+    <li class='list-group-item p-1 position-relative rounded-0' data-id='__id__' >
+        <span class='label-content'>__label__</span>
+        <button 
+            class='btn btn-default btn-sm position-absolute' 
+            style='top:0;right:0' 
+            type='button'
+            data-action="spreadsheet-column-conf#unselectColumn"
+        >
+            x
+        </button>
+    </li>
+{% endmacro %}
 
 {% block content %}
     <div class="container">
-        <div class="row">
-            <div class="col-md-6">
+        <div class="row" {{ stimulus_controller('spreadsheet-column-conf') }}>
+            <div class="col-6">            
                 {{ form_start(form) }}
-                {# add an check box with  export-column-all-checkbox to check/uncheck all elements #}
-                <input type="checkbox" class="form-check-input export-column-all-checkbox">
-                {{ form_rest(form) }}
-                <button class="btn btn-primary">
-                    Download
+                {{ form_row(form) }}                  
+                <button type="submit" class="btn btn-success">
+                    GO
                 </button>
                 {{ form_end(form) }}
             </div>
-            <div class="col-md-6">
-                {% include "@AzuracomSpreadsheetToObject/spreadsheet_column_choice.html.twig" with {form: form} %}
+            <div class="col-6">
+                <div class="d-flex align-items-stretch flex-row">
+                    <ul 
+                        class="list-group" 
+                        style="flex: 0 0 40px;"
+                        data-spreadsheet-column-conf-target='columnIndexes'
+                    >
+                        {% for column in getColumnFromForm(form) %}
+                            <li class="list-group-item rounded-0 p-1">{{ column }}</li>
+                        {% endfor %}
+                    </ul>
+                    <ul 
+                        class="list-group" 
+                        style="flex: auto;"
+                        data-spreadsheet-column-conf-target='selectedColumns'
+                        data-element-widget=" {{ _self.selectedColumnItem()|e('html') }}"
+                    >
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 {% endblock %}
+
 ```
 
 
