@@ -14,9 +14,15 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
     private $choiceSeparator;
     private $defaultLocale;
     private $caseSensitive;
+    private $createChoiceCallback;
 
-    public function __construct(AttributeInterface $attribute, $defaultLocale, $choiceSeparator = ',', $caseSensitive = false)
-    {
+    public function __construct(
+        AttributeInterface $attribute,
+        string $defaultLocale,
+        string $choiceSeparator = ',',
+        bool $caseSensitive = false,
+        ?callable $createChoiceCallback = null
+    ) {
         if ($attribute->getType() !== SelectAttributeType::TYPE) {
             throw new \LogicException(sprintf("Attribute should be of type %s", SelectAttributeType::TYPE));
         }
@@ -24,6 +30,7 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
         $this->choiceSeparator = $choiceSeparator;
         $this->defaultLocale = $defaultLocale;
         $this->caseSensitive = $caseSensitive;
+        $this->createChoiceCallback = $createChoiceCallback;
     }
 
     public function transform($value)
@@ -35,7 +42,7 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
         $choices = $this->attribute->getConfiguration()['choices'];
         $string = "";
         foreach ($value as $choice) {
-            if(!isset($choices[$choice]) || !isset($choices[$choice][$this->defaultLocale])){
+            if (!isset($choices[$choice]) || !isset($choices[$choice][$this->defaultLocale])) {
                 continue;
             }
 
@@ -68,7 +75,7 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
                     $values[] = $tmpChoiceValue;
                     $tmpChoiceValue = $this->caseSensitive ? $tmpChoiceValue : strtolower($tmpChoiceValue);
 
-                    if(trim($choiceValue) == $tmpChoiceValue){
+                    if (trim($choiceValue) == $tmpChoiceValue) {
                         $foundedKey = $key;
                         break;
                     }
@@ -76,10 +83,18 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
             }
 
             if (!$foundedKey) {
-                throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, null, [
-                    '%value%' => (string) $choice,
-                    '%values%' => ": " . implode(', ', $values),
-                ]);
+
+                if ($this->createChoiceCallback) {
+                    $foundedKey = call_user_func_array($this->createChoiceCallback, [$choice, $this->attribute, $this->defaultLocale]);
+                    if (!$foundedKey) {
+                        throw new \LogicException("azuracom_spreadsheet_to_object.data_transformer_exception.create_choice_callback_return_null");
+                    }
+                } else {
+                    throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.choice_value_not_found", 0, null, null, [
+                        '%value%' => (string) $choice,
+                        '%values%' => ": " . implode(', ', $values),
+                    ]);
+                }
             }
 
             $results[] = $foundedKey;

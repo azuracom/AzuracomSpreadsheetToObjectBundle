@@ -8,6 +8,7 @@ azuracom_spreadsheet_to_object:
         excel_datetime: This value is not a valid date
         choice_value_not_found: Value "%value%" is not in the presetted list%values%
         attribute_value_multiple_not_allowed: Only one value is allowed for this field
+        create_choice_callback_return_null: The create choice callback function must the new genereated key
     row_handler:
         error_at_column: 'Row %row% column %column% %column_label% : %error%'
         error_at_property: 'Row %row% property %property% : %error%'

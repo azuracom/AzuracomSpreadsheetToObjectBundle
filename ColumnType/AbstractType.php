@@ -4,6 +4,7 @@ namespace Azuracom\SpreadsheetToObject\ColumnType;
 
 use Symfony\Component\Form\DataTransformerInterface;
 use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Symfony\Component\Form\Util\StringUtil;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -126,7 +127,7 @@ abstract class AbstractType implements ColumnTypeInterface
         $resolver->setAllowedTypes('help', ['string', 'null']);
         $resolver->setAllowedTypes('has_changed_callback', ['null', 'callable']);
         $resolver->setAllowedTypes('row', ['null', 'int']);
-        $resolver->setAllowedTypes('column', ['null', 'string']);
+        $resolver->setAllowedTypes('column', ['null', 'string', 'int']);
         $resolver->setAllowedTypes('cell', ['null', 'string']);
         $resolver->setAllowedTypes('transformation_error_code', ['int']);
         $resolver->setAllowedTypes('cell_styles', ['null', 'array', 'callable']);
@@ -163,6 +164,10 @@ abstract class AbstractType implements ColumnTypeInterface
         });
 
         $resolver->setNormalizer('column', function (Options $options, $value) {
+            if (is_int($value) || preg_match('/^\d+$/', $value)) {
+                return Coordinate::stringFromColumnIndex((int) $value);
+            }
+
             if ($value) {
                 return $value;
             }
