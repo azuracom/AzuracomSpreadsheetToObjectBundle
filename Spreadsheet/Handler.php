@@ -336,7 +336,10 @@ class Handler implements \Iterator, HandlerInterface
 
             foreach ($this->columnTypes as $type) {
                 $errorMatchPath = $type->getOption('error_match_path');
-                if ($type->getName() == $name || ($errorMatchPath && preg_match("#$errorMatchPath#", $name))) {
+                if (
+                    ($type->getName() == $name || ($errorMatchPath && preg_match("#$errorMatchPath#", $name))) &&
+                    $type->isDataMapped($data, $key)
+                ) {
                     $row = $this->getTypeRow($type);
                     $column = $type->getColumn();
                     $columnLabel = $type->getOption('label');
