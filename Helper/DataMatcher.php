@@ -38,7 +38,7 @@ class DataMatcher
     {
         $type = $type ? $type : $this->currentType;
         $uniqueId = $uniqueId ? $uniqueId : $this->currentUniqueId;
-        $match = $this->formatKey($match, $this->currentType);
+        $match = $this->formatKey($match, $this->currentType, $matchKey);
         $this->matches[$this->currentType][$matchKey][$match] = $this->currentUniqueId;
 
         return $this;
@@ -66,7 +66,7 @@ class DataMatcher
         $this->convertMatches($type, $matches);
 
         foreach ($matches as $matchKey => $match) {
-            $this->matches[$type][$matchKey][$this->formatKey($match, $type)] = $uniqueId;
+            $this->matches[$type][$matchKey][$this->formatKey($match, $type, $matchKey)] = $uniqueId;
         }
 
         return $this;
@@ -115,7 +115,7 @@ class DataMatcher
                 continue;
             }
 
-            $match = $this->formatKey($match, $type);
+            $match = $this->formatKey($match, $type, $matchKey);
 
             if (isset($this->matches[$type][$matchKey]) && isset($this->matches[$type][$matchKey][$match])) {
                 return $this->matches[$type][$matchKey][$match];
@@ -140,7 +140,7 @@ class DataMatcher
         return $this->matches;
     }
 
-    public function formatKey($value, string $type = null)
+    public function formatKey($value, string $type = null, $matchKey = null)
     {
         if (!is_array($value)) {
             $value = array($value);
@@ -149,19 +149,19 @@ class DataMatcher
         $key = "";
 
         foreach ($value as $tmp) {
-            $key .= $this->applyFormat($tmp, $type) . "|";
+            $key .= $this->applyFormat($tmp, $type, $matchKey) . "|";
         }
         $key = substr($key, 0, -1);
         return $key;
     }
 
-    private function applyFormat($value, string $type = null)
+    private function applyFormat($value, string $type = null, $matchKey = null)
     {
         if (!$callback = $this->keyFormatterCallback) {
             return trim(strtolower($value));
         }
 
-        return $callback($value, $type);
+        return $callback($value, $type, $matchKey);
     }
 
     /**
