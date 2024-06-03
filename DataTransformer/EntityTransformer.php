@@ -94,7 +94,12 @@ class EntityTransformer implements DataTransformerInterface
                 $className = $this->repository->getClassName();
                 $result = new $className();
                 if ($this->createCallback) {
-                    call_user_func_array($this->createCallback, [$result, $value, $this]);
+                    $createResult = call_user_func_array($this->createCallback, [$result, $value, $this]);
+                    if ($createResult === false) {
+                        throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.entity", 0, null, null, [
+                            '%value%' => $value
+                        ]);
+                    }
                 }
             }
         }
