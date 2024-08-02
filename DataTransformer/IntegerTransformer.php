@@ -19,7 +19,7 @@ class IntegerTransformer implements DataTransformerInterface
             return null;
         }
 
-        if (!preg_match("#^\d+$#",$stringValue)) {
+        if (!preg_match("#^(-)?\d+$#",$stringValue)) {
             throw new TransformationFailedException("azuracom_spreadsheet_to_object.data_transformer_exception.integer");
         }
 
