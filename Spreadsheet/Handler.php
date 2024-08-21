@@ -150,7 +150,7 @@ class Handler implements \Iterator, HandlerInterface
             if ($comment = $type->getOption('column_comment')) {
                 $sheet->getComment($type->getColumn() . $rowNumber)->getText()->createText($comment);
             }
-            
+
             if (($width = $type->getOption('column_comment_width')) !== null) {
                 $sheet->getComment($type->getColumn() . $rowNumber)->setWidth($width . 'pt');
             }
@@ -262,23 +262,23 @@ class Handler implements \Iterator, HandlerInterface
 
                 $oldValue = $type->getDataValue($data, false);
 
-                //validate conf contraints
-                $valueErrors = $this->validator->validate($newValue, $type->getOption('constraints'));
-                foreach ($valueErrors as $error) {
-                    $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
-                        '%row%' => $row,
-                        '%column%' => $column,
-                        '%column_label%' => $columnLabel,
-                        '%error%' => $error->getMessage()
-                    ]);
-
-                    $this->errors[] = new Error($message, $error->getCode(), $row, $column);
-                }
-
                 if ($type->hasChanged($newValue, $oldValue)) {
+                    //validate conf contraints
+                    $valueErrors = $this->validator->validate($newValue, $type->getOption('constraints'));
+                    foreach ($valueErrors as $error) {
+                        $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
+                            '%row%' => $row,
+                            '%column%' => $column,
+                            '%column_label%' => $columnLabel,
+                            '%error%' => $error->getMessage()
+                        ]);
+
+                        $this->errors[] = new Error($message, $error->getCode(), $row, $column);
+                    }
+
                     if ($type->dataCanBeUpdated($data, $newValue, $oldValue)) {
                         $type->setDataValue($data, $newValue);
-                        
+
                         //reset old value
                         if (count($valueErrors)) {
                             $type->setDataValue($data, $oldValue);
@@ -287,7 +287,7 @@ class Handler implements \Iterator, HandlerInterface
                             $newStringValue = $type->getValue(null);
                             $this->changes[$type->getLabel()] = "'$oldStringValue' => '$newStringValue'";
                         }
-                    } elseif($type->getOption('allow_update_error')) {
+                    } elseif ($type->getOption('allow_update_error')) {
                         $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.value_not_editable", [
                             '%row%' => $row,
                             '%column%' => $column,
@@ -343,7 +343,7 @@ class Handler implements \Iterator, HandlerInterface
                     $row = $this->getTypeRow($type);
                     $column = $type->getColumn();
                     $columnLabel = $type->getOption('label');
-                    
+
                     $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
                         '%row%' => $row,
                         '%column%' => $column,
