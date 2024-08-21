@@ -16,6 +16,7 @@ use Sylius\Component\Attribute\AttributeType\CheckboxAttributeType;
 use Sylius\Component\Attribute\AttributeType\DateAttributeType;
 use Sylius\Component\Attribute\AttributeType\DatetimeAttributeType;
 use Sylius\Component\Attribute\AttributeType\IntegerAttributeType;
+use Sylius\Component\Attribute\AttributeType\PercentAttributeType;
 use Sylius\Component\Attribute\AttributeType\SelectAttributeType;
 use Sylius\Component\Attribute\AttributeType\TextareaAttributeType;
 use Sylius\Component\Attribute\AttributeType\TextAttributeType;
@@ -145,7 +146,7 @@ abstract class AttributeType extends AbstractType
                 return (new BooleanTransformer(['yes'], ['no']));
             case IntegerAttributeType::TYPE:
                 return (new IntegerTransformer());
-            case IntegerAttributeType::TYPE:
+            case PercentAttributeType::TYPE:
                 return (new PercentTransformer());
             case DateAttributeType::TYPE:
                 return (new ExcelDateTimeTransformer());

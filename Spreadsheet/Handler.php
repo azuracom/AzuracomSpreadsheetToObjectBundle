@@ -525,4 +525,17 @@ class Handler implements \Iterator, HandlerInterface
 
         return $column;
     }
+
+    public function getSortedColumns(): array
+    {
+        $columns = [];
+        foreach ($this->columnTypes as $columnType) {
+            $index = Coordinate::columnIndexFromString($columnType->getColumn());
+            $columns[$index] = $columnType;
+        }
+
+        ksort($columns);
+
+        return $columns;
+    }
 }
