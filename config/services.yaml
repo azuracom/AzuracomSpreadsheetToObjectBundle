@@ -12,15 +12,15 @@ services:
         class: Azuracom\SpreadsheetToObjectBundle\Registry\ColumnTypeRegistry   
 
     Azuracom\SpreadsheetToObjectBundle\ColumnType\:
-        resource: '../../ColumnType'
+        resource: '../src/ColumnType'
         tags: ['azuracom_spresheet_to_object.column_type']   
 
     Azuracom\SpreadsheetToObjectBundle\Twig\:
-        resource: '../../Twig'
+        resource: '../src/Twig'
         tags: ['twig.extension']  
         
     Azuracom\SpreadsheetToObjectBundle\Form\:
-        resource: '../../Form'
+        resource: '../src/Form'
         tags: ['form.type']           
 
     #aliases

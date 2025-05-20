@@ -2,23 +2,27 @@
 
 namespace Azuracom\SpreadsheetToObjectBundle\Registry;
 
-use Psr\Container\ContainerInterface;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\ColumnTypeInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 class ColumnTypeRegistry
 {
-    protected $typeContainer;
-    
-    public function __construct(ContainerInterface $typeContainer)
-    {
-        $this->typeContainer = $typeContainer;
-    }
 
-    public function getType($name)
+    public function __construct(
+        /** @var ColumnTypeInterface */
+        #[AutowireIterator('azuracom_spresheet_to_object.column_type')]
+        private iterable $columnTypes,
+    ) {}
+
+    public function getType($name): ColumnTypeInterface
     {
-        if (!$this->typeContainer->has($name)) {
-            throw new \InvalidArgumentException(sprintf('The column type "%s" is not registered in the service container.', $name));
+        /** @var ColumnTypeInterface */
+        foreach ($this->columnTypes as $type) {
+            if ($type->getName() === $name) {
+                return $type;
+            }
         }
 
-        return $this->typeContainer->get($name);
+        throw new \InvalidArgumentException(sprintf('Column type "%s" not found.', $name));
     }
 }
