@@ -45,7 +45,7 @@ in the `config/bundles.php` file of your project:
 
 return [
     // ...
-    Azuracom\SpreadsheetToObject\AzuracomSpreadsheetToObjectBundle::class => ['all' => true],
+    Azuracom\SpreadsheetToObjectBundle\AzuracomSpreadsheetToObjectBundle::class => ['all' => true],
 ];
 ```
 
@@ -62,12 +62,12 @@ Usage
 
 namespace App\Spreadsheet\HandlerBuilder;
 
-use Azuracom\SpreadsheetToObject\ColumnType\BooleanType;
-use Azuracom\SpreadsheetToObject\ColumnType\CollectionType;
-use Azuracom\SpreadsheetToObject\ColumnType\IntegerType;
-use Azuracom\SpreadsheetToObject\ColumnType\MoneyType;
-use Azuracom\SpreadsheetToObject\ColumnType\TextType;
-use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\BooleanType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\CollectionType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\IntegerType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\MoneyType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\TextType;
+use Azuracom\SpreadsheetToObjectBundle\Factory\HandlerFactoryInterface;
 use Symfony\Component\Form\CallbackTransformer;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
@@ -253,8 +253,8 @@ yarn add sortablejs
 
 namespace App\Form\Filter;
 
-use Azuracom\SpreadsheetToObject\ColumnType\TextType;
-use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnCheckboxType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\TextType;
+use Azuracom\SpreadsheetToObjectBundle\Form\Type\ExportColumnCheckboxType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -291,8 +291,8 @@ class ExportCustomerColumFilter extends AbstractType
 
 namespace App\Form\Filter;
 
-use Azuracom\SpreadsheetToObject\ColumnType\TextType;
-use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnCheckboxType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\TextType;
+use Azuracom\SpreadsheetToObjectBundle\Form\Type\ExportColumnCheckboxType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -330,8 +330,8 @@ class ExportCustomerAddressColumFilter extends AbstractType
 namespace App\Controller;
 
 use App\Form\Filter\ExportCustomerColumFilter;
-use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
-use Azuracom\SpreadsheetToObject\Form\Type\ExportColumnGroupType;
+use Azuracom\SpreadsheetToObjectBundle\Factory\HandlerFactoryInterface;
+use Azuracom\SpreadsheetToObjectBundle\Form\Type\ExportColumnGroupType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\Routing\Annotation\Route;
@@ -685,14 +685,14 @@ namespace App\Spreadsheet\HandlerBuilder;
 
 use App\Entity\Product;
 use App\Entity\Seller;
-use Azuracom\SpreadsheetToObject\ColumnType\ColumnTypeInterface;
-use Azuracom\SpreadsheetToObject\ColumnType\ChoiceType;
-use Azuracom\SpreadsheetToObject\ColumnType\MoneyType;
-use Azuracom\SpreadsheetToObject\ColumnType\TextType;
-use Azuracom\SpreadsheetToObject\ColumnType\EntityType;
-use Azuracom\SpreadsheetToObject\DataTransformer\EntityTransformer;
-use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
-use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\ColumnTypeInterface;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\ChoiceType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\MoneyType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\TextType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\EntityType;
+use Azuracom\SpreadsheetToObjectBundle\DataTransformer\EntityTransformer;
+use Azuracom\SpreadsheetToObjectBundle\Factory\HandlerFactoryInterface;
+use Azuracom\SpreadsheetToObjectBundle\Spreadsheet\HandlerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Validator\Constraints\NotBlank;
@@ -820,7 +820,7 @@ namespace App\Controller;
 
 use App\Entity\Product;
 use App\Spreadsheet\HandlerBuilder\ProductImportHandlerBuilder;
-use Azuracom\SpreadsheetToObject\Error\Error;
+use Azuracom\SpreadsheetToObjectBundle\Error\Error;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -943,7 +943,7 @@ class ProductController extends AbstractController
 
 namespace App\Spreadsheet\ColumnType;
 
-use Azuracom\SpreadsheetToObject\ColumnType\AttributeType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\AttributeType;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 
 class ProductAttributeType extends AttributeType
@@ -984,11 +984,11 @@ namespace App\Spreadsheet\HandlerBuilder;
 use App\Entity\Product;
 use App\Entity\ProductAttribute;
 use App\Spreadsheet\ColumnType\ProductAttributeType;
-use Azuracom\SpreadsheetToObject\Factory\HandlerFactoryInterface;
-use Azuracom\SpreadsheetToObject\Spreadsheet\HandlerInterface;
+use Azuracom\SpreadsheetToObjectBundle\Factory\HandlerFactoryInterface;
+use Azuracom\SpreadsheetToObjectBundle\Spreadsheet\HandlerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Sylius\Component\Attribute\AttributeType\CheckboxAttributeType;
-use Azuracom\SpreadsheetToObject\DataTransformer\BooleanTransformer;
+use Azuracom\SpreadsheetToObjectBundle\DataTransformer\BooleanTransformer;
 
 class ProductImportHandlerBuilder
 {

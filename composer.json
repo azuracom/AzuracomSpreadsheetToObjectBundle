@@ -13,19 +13,15 @@
         }
     ],
     "require": {
-        "php": ">=7.2",
-        "symfony/validator": ">=4.4",
-        "symfony/event-dispatcher": ">=4.4",
-        "phpoffice/phpspreadsheet": "^1.0",
-        "symfony/form": ">=4.4",
-        "symfony/options-resolver": ">=4.4"
+        "php": ">=8.0",
+        "phpoffice/phpspreadsheet": "*"
     },
     "config": {
         "sort-packages": true
     },
     "autoload": {
         "psr-4": {
-            "Azuracom\\SpreadsheetToObject\\": ""
+            "Azuracom\\SpreadsheetToObjectBundle\\": "src/"
         }
     }
 }

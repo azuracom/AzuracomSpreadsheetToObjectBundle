@@ -1,0 +1,28 @@
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: true
+
+    azuracom.spresheet_to_object.factory.handler:
+        class: Azuracom\SpreadsheetToObjectBundle\Factory\HandlerFactory
+
+    azuracom.spresheet_to_object.column_type_registry:
+        class: Azuracom\SpreadsheetToObjectBundle\Registry\ColumnTypeRegistry   
+
+    Azuracom\SpreadsheetToObjectBundle\ColumnType\:
+        resource: '../../ColumnType'
+        tags: ['azuracom_spresheet_to_object.column_type']   
+
+    Azuracom\SpreadsheetToObjectBundle\Twig\:
+        resource: '../../Twig'
+        tags: ['twig.extension']  
+        
+    Azuracom\SpreadsheetToObjectBundle\Form\:
+        resource: '../../Form'
+        tags: ['form.type']           
+
+    #aliases
+    Azuracom\SpreadsheetToObjectBundle\Factory\HandlerFactoryInterface: '@azuracom.spresheet_to_object.factory.handler'
+    Azuracom\SpreadsheetToObjectBundle\Registry\ColumnTypeRegistry: '@azuracom.spresheet_to_object.column_type_registry'
