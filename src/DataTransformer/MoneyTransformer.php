@@ -6,7 +6,7 @@ use Symfony\Component\Form\DataTransformerInterface;
 
 class MoneyTransformer implements DataTransformerInterface
 {
-    public function transform($intValue)
+    public function transform(mixed $intValue): mixed
     {
         if ($intValue === null) {
             return null;
@@ -14,7 +14,7 @@ class MoneyTransformer implements DataTransformerInterface
 
         return (string) ($intValue / 100);
     }
-    public function reverseTransform($stringValue)
+    public function reverseTransform(mixed $stringValue): mixed
     {
         if ($stringValue === null) {
             return null;

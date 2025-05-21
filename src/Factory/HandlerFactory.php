@@ -3,7 +3,7 @@
 namespace Azuracom\SpreadsheetToObjectBundle\Factory;
 
 use Azuracom\SpreadsheetToObjectBundle\Form\Type\ExportColumnCheckboxType;
-use Azuracom\SpreadsheetToObjectBundle\Registry\ColumnTypeRegistry;
+use Azuracom\SpreadsheetToObjectBundle\Registry\CellTypeRegistry;
 use Azuracom\SpreadsheetToObjectBundle\Spreadsheet\Handler;
 use Azuracom\SpreadsheetToObjectBundle\Spreadsheet\HandlerInterface;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -14,28 +14,16 @@ use Symfony\Component\Form\FormInterface;
 
 class HandlerFactory implements HandlerFactoryInterface
 {
-    /** @var  ColumnTypeInterface[] */
-    protected $columnTypes = [];
+    /** @var  CellTypeInterface[] */
+    protected array $CellTypes = [];
 
-    /** @var ColumnTypeRegistry */
-    protected $registry;
-
-    /** @var ValidatorInterface */
-    protected $validator;
-
-    /** @var TranslatorInterface */
-    protected $translator;
-
-    /** @var  EventDispatcherInterface */
-    protected $dispatcher;
-
-    protected $columnIndex;
+    protected ?int $columnIndex = null;
 
     public function __construct(
-        ColumnTypeRegistry $registry,
-        ValidatorInterface $validator,
-        EventDispatcherInterface $dispatcher,
-        TranslatorInterface $translator
+        protected CellTypeRegistry $registry,
+        protected ValidatorInterface $validator,
+        protected EventDispatcherInterface $dispatcher,
+        protected TranslatorInterface $translator
     ) {
         $this->registry = $registry;
         $this->validator = $validator;
@@ -82,7 +70,7 @@ class HandlerFactory implements HandlerFactoryInterface
         return true;
     }
 
-    private function iterateOnFormR(FormInterface $form, HandlerInterface $handler, bool $forceSelected)
+    private function iterateOnFormR(FormInterface $form, HandlerInterface $handler, bool $forceSelected): void
     {
         foreach ($form->all() as $field) {
             if ($field->count()) {
@@ -102,12 +90,12 @@ class HandlerFactory implements HandlerFactoryInterface
                 }
 
                 $fieldOptions = $field->getConfig()->getOptions();
-                $options = $fieldOptions['column_options'];
+                $options = $fieldOptions['cell_options'];
                 $options['label'] = $fieldOptions['label'];
                 $options['column'] = $column;
-                $options['key'] = isset($options['key']) ? $options['key'] : $fieldOptions['column_key'];
-                $name = $fieldOptions['column_name'] ? $fieldOptions['column_name'] : $field->getName();
-                $type = $fieldOptions['column_type'];
+                $options['key'] = isset($options['key']) ? $options['key'] : $fieldOptions['cell_key'];
+                $name = $fieldOptions['cell_name'] ? $fieldOptions['cell_name'] : $field->getName();
+                $type = $fieldOptions['cell_type'];
 
                 $handler->add($name, $type, $options);
             }

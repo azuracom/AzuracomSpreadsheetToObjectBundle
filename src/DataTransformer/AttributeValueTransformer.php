@@ -8,27 +8,16 @@ use Symfony\Component\Form\DataTransformerInterface;
 
 class AttributeValueTransformer implements DataTransformerInterface
 {
-    private $defaultLocale;
-    private $factory;
-    private $attribute;
-    private $innerTransformer;
-    private $allowNullValue;
-
     public function __construct(
-        FactoryInterface $factory,
-        AttributeInterface $attribute,
-        ?DataTransformerInterface $innerTransformer,
-        string $defaultLocale,
-        bool $allowNullValue = false
+        private FactoryInterface $factory,
+        private AttributeInterface $attribute,
+        private ?DataTransformerInterface $innerTransformer,
+        private string $defaultLocale,
+        private bool $allowNullValue = false
     ) {
-        $this->defaultLocale = $defaultLocale;
-        $this->factory = $factory;
-        $this->attribute = $attribute;
-        $this->innerTransformer = $innerTransformer;
-        $this->allowNullValue = $allowNullValue;
     }
 
-    public function transform($value)
+    public function transform(mixed $value): mixed
     {
         if (!$value) {
             return null;
@@ -40,9 +29,8 @@ class AttributeValueTransformer implements DataTransformerInterface
         return $attributeValue;
     }
 
-    public function reverseTransform($value)
+    public function reverseTransform(mixed $value): mixed
     {
-
 
         $attribute = $this->attribute;
         $transformer = $this->innerTransformer;

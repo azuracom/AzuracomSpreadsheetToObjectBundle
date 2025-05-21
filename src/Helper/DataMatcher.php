@@ -4,14 +4,14 @@ namespace Azuracom\SpreadsheetToObjectBundle\Helper;
 
 class DataMatcher
 {
-    protected $datas = array();
-    protected $matches = array();
-    protected $keyFormatterCallback;
-    protected $currentUniqueId = null;
-    protected $currentType = null;
-    protected $adder = array();
+    protected array $datas = [];
+    protected array $matches = [];
+    protected ?callable $keyFormatterCallback = null;
+    protected mixed $currentUniqueId = null;
+    protected string $currentType = null;
+    protected array $adder = [];
 
-    public function reset($types = null)
+    public function reset(?array $types = null)
     {
         if ($types === null) {
             $this->datas = array();
@@ -25,7 +25,7 @@ class DataMatcher
         }
     }
 
-    public function addData(string $type, $data, $uniqueId = null)
+    public function addData(string $type, mixed $data, string|int|null $uniqueId = null): static
     {
         $this->currentUniqueId = $uniqueId ? $uniqueId : $this->guessUniqueKey($type, $data);
         $this->currentType = $type;
@@ -34,8 +34,12 @@ class DataMatcher
         return $this;
     }
 
-    public function addMatch($match, $matchKey = 0, string $type = null, $uniqueId = null)
-    {
+    public function addMatch(
+        string $match,
+        string|int $matchKey = 0,
+        ?string $type = null,
+        string|int|null $uniqueId = null
+    ): static {
         $type = $type ? $type : $this->currentType;
         $uniqueId = $uniqueId ? $uniqueId : $this->currentUniqueId;
         $match = $this->formatKey($match, $this->currentType, $matchKey);
@@ -44,7 +48,7 @@ class DataMatcher
         return $this;
     }
 
-    public function guessUniqueKey(string $type, $data)
+    public function guessUniqueKey(string $type, mixed $data): string
     {
         if (is_array($data) && isset($data['id']) && $data['id']) {
             return $data['id'];
@@ -57,7 +61,7 @@ class DataMatcher
         return uniqid($type . "_");
     }
 
-    public function setMatchesForData(string $type, $uniqueId, array $matches)
+    public function setMatchesForData(string $type, string|int $uniqueId, array $matches): static
     {
         if (!isset($this->matches[$type])) {
             $this->matches[$type] = [];
@@ -72,7 +76,7 @@ class DataMatcher
         return $this;
     }
 
-    public function findData(string $type, $matches)
+    public function findData(string $type, $matches): mixed
     {
         $key = $this->getDataKey($type, $matches);
         if ($key !== null) {
@@ -82,7 +86,7 @@ class DataMatcher
         return null;
     }
 
-    private function convertMatches(string $type, array &$matches)
+    private function convertMatches(string $type, array &$matches): static
     {
         //check if data has only one matches
         if (!is_array($matches)) {
@@ -100,7 +104,7 @@ class DataMatcher
         return $this;
     }
 
-    public function getDataKey(string $type, $matches)
+    public function getDataKey(string $type, mixed $matches): mixed
     {
         $matches = is_array($matches) ? $matches : [$matches];
 
@@ -125,22 +129,22 @@ class DataMatcher
         return null;
     }
 
-    public function getDataAtKey(string $type, $key)
+    public function getDataAtKey(string $type, string|int $key): mixed
     {
         return isset($this->datas[$type][$key]) ? $this->datas[$type][$key] : null;
     }
 
-    public function getDatas()
+    public function getDatas(): array
     {
         return $this->datas;
     }
 
-    public function getMatches()
+    public function getMatches(): array
     {
         return $this->matches;
     }
 
-    public function formatKey($value, string $type = null, $matchKey = null)
+    public function formatKey(mixed $value, ?string $type = null, string|int|null $matchKey = null): string
     {
         if (!is_array($value)) {
             $value = array($value);
@@ -155,7 +159,7 @@ class DataMatcher
         return $key;
     }
 
-    private function applyFormat($value, string $type = null, $matchKey = null)
+    private function applyFormat(mixed $value, ?string $type = null,  string|int|null $matchKey = null): mixed
     {
         if (!$callback = $this->keyFormatterCallback) {
             return trim(strtolower($value));
@@ -167,7 +171,7 @@ class DataMatcher
     /**
      * Get the value of keyFormatterCallback
      */
-    public function getKeyFormatterCallback()
+    public function getKeyFormatterCallback(): ?callable
     {
         return $this->keyFormatterCallback;
     }
@@ -177,7 +181,7 @@ class DataMatcher
      *
      * @return  self
      */
-    public function setKeyFormatterCallback(callable $keyFormatterCallback = null)
+    public function setKeyFormatterCallback(?callable $keyFormatterCallback = null)
     {
         $this->keyFormatterCallback = $keyFormatterCallback;
 
@@ -187,17 +191,17 @@ class DataMatcher
     /**
      * Get the value of currentUniqueId
      */
-    public function getCurrentUniqueId()
+    public function getCurrentUniqueId(): mixed
     {
         return $this->currentUniqueId;
     }
 
-    public function createAdder(string $type, callable $callable)
+    public function createAdder(string $type, callable $callable): void
     {
         $this->adder[$type] = $callable;
     }
 
-    public function getAdder($type)
+    public function getAdder($type): ?callable
     {
         return isset($this->adder[$type]) ? $this->adder[$type] : null;
     }

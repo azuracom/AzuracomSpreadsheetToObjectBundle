@@ -8,7 +8,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class ExcelDateTimeTransformer implements DataTransformerInterface
 {
-    public function transform($value)
+    public function transform(mixed $value): mixed
     {
         if ($value === null) {
             return $value;
@@ -17,7 +17,7 @@ class ExcelDateTimeTransformer implements DataTransformerInterface
         return Date::dateTimeToExcel($value);
     }
 
-    public function reverseTransform($value)
+    public function reverseTransform(mixed $value): mixed
     {
         if ($value === null) {
             return $value;

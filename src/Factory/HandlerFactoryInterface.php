@@ -7,7 +7,7 @@ use Symfony\Component\Form\FormInterface;
 
 interface HandlerFactoryInterface
 {
-    public function create() : HandlerInterface;
+    public function create(): HandlerInterface;
 
-    public function createFromForm(FormInterface $form) : HandlerInterface;
+    public function createFromForm(FormInterface $form): HandlerInterface;
 }

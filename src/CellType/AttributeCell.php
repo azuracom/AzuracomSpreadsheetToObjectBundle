@@ -1,6 +1,6 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
 use Azuracom\SpreadsheetToObjectBundle\DataTransformer\AttributeValueSelectValueTransformer;
 use Azuracom\SpreadsheetToObjectBundle\DataTransformer\AttributeValueTransformer;
@@ -25,7 +25,7 @@ use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-abstract class AttributeType extends AbstractType
+abstract class AttributeCell extends AbstractCell
 {
     /** @var string */
     protected $locale;
@@ -33,7 +33,7 @@ abstract class AttributeType extends AbstractType
     /** @var FactoryInterface */
     protected $factory;
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
 

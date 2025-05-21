@@ -1,15 +1,15 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
-use Azuracom\SpreadsheetToObjectBundle\DataTransformer\MoneyTransformer;
+use Azuracom\SpreadsheetToObjectBundle\DataTransformer\IntegerTransformer;
 use Symfony\Component\Form\DataTransformerInterface;
 
-class MoneyType extends AbstractType
+class IntegerCell extends AbstractCell
 {
     public function getDefaultTransformer($options): ?DataTransformerInterface
     {
-        return new MoneyTransformer();
+        return new IntegerTransformer();
     }
 
     public function hasChangedInner($newValue,$oldValue) :bool

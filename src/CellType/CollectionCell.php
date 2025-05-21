@@ -1,15 +1,15 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
 use Azuracom\SpreadsheetToObjectBundle\DataTransformer\CollectionTransformer;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class CollectionType extends AbstractType
+class CollectionCell extends AbstractCell
 {
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
 

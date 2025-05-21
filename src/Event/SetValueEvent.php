@@ -2,29 +2,22 @@
 
 namespace Azuracom\SpreadsheetToObjectBundle\Event;
 
-use Azuracom\SpreadsheetToObjectBundle\ColumnType\ColumnTypeInterface;
+use Azuracom\SpreadsheetToObjectBundle\CellType\CellTypeInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class SetValueEvent extends Event
 {
-    protected $data;
 
-    protected $value;
-
-    /** @var ColumnTypeInterface */
-    private $columnType;
-
-    public function __construct(ColumnTypeInterface $columnType,$data,$value)
-    {
-        $this->columnType = $columnType;
-        $this->data = $data;
-        $this->value = $value;
-    }
+    public function __construct(
+        private CellTypeInterface $cellType,
+        private mixed $data,
+        private mixed $value
+    ) {}
 
     /**
      * Get the value of data
-     */ 
-    public function getData()
+     */
+    public function getData(): mixed
     {
         return $this->data;
     }
@@ -33,8 +26,8 @@ class SetValueEvent extends Event
      * Set the value of data
      *
      * @return  self
-     */ 
-    public function setData($data)
+     */
+    public function setData(mixed $data): static
     {
         $this->data = $data;
 
@@ -42,17 +35,17 @@ class SetValueEvent extends Event
     }
 
     /**
-     * Get the value of columnType
-     */ 
-    public function getColumnType()
+     * Get the value of CellType
+     */
+    public function getCellType(): CellTypeInterface
     {
-        return $this->columnType;
+        return $this->cellType;
     }
 
     /**
      * Get the value of value
-     */ 
-    public function getValue()
+     */
+    public function getValue(): mixed
     {
         return $this->value;
     }
@@ -61,8 +54,8 @@ class SetValueEvent extends Event
      * Set the value of value
      *
      * @return  self
-     */ 
-    public function setValue($value)
+     */
+    public function setValue(mixed $value): static
     {
         $this->value = $value;
 

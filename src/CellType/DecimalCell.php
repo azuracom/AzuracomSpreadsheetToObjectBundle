@@ -1,11 +1,11 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
 use Azuracom\SpreadsheetToObjectBundle\DataTransformer\DecimalTransformer;
 use Symfony\Component\Form\DataTransformerInterface;
 
-class DecimalType extends AbstractType
+class DecimalCell extends AbstractCell
 {
     public function getDefaultTransformer($options): ?DataTransformerInterface
     {

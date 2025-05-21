@@ -6,7 +6,7 @@ use Symfony\Component\Form\DataTransformerInterface;
 
 class StringTransformer implements DataTransformerInterface
 {
-    public function transform($v)
+    public function transform(mixed $v): mixed
     {
         if ($v === null) {
             return null;
@@ -15,7 +15,7 @@ class StringTransformer implements DataTransformerInterface
         return (string) $v;
     }
 
-    public function reverseTransform($v)
+    public function reverseTransform(mixed $v): mixed
     {
         return $this->transform($v);
     }

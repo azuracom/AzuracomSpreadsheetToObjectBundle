@@ -7,29 +7,27 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 class SetValuesEvent extends Event
 {
-    protected $data;
 
-    /** @var HandlerInterface */
-    private $handler;
-
-    public function __construct(HandlerInterface $handler,$data)
-    {
+    public function __construct(
+        protected HandlerInterface $handler,
+        protected mixed $data
+    ) {
         $this->handler = $handler;
         $this->data = $data;
     }
 
     /**
      * Get the value of Handler
-     */ 
-    public function getHandler() : HandlerInterface
+     */
+    public function getHandler(): HandlerInterface
     {
         return $this->handler;
     }
 
     /**
      * Get the value of data
-     */ 
-    public function getData()
+     */
+    public function getData(): mixed
     {
         return $this->data;
     }
@@ -38,8 +36,8 @@ class SetValuesEvent extends Event
      * Set the value of data
      *
      * @return  self
-     */ 
-    public function setData($data)
+     */
+    public function setData($data): static
     {
         $this->data = $data;
 

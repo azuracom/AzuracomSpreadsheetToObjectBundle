@@ -7,21 +7,14 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
 
 class EnumTransformer implements DataTransformerInterface
 {
-    private $class;
-    private $labelCb;
-    private $notFoundMessage;
-
     public function __construct(
-        string $class,
-        ?callable $labelCb,
-        string $notFoundMessage
+        private string $class,
+        private mixed $labelCb,
+        private string $notFoundMessage
     ) {
-        $this->class = $class;
-        $this->labelCb = $labelCb;
-        $this->notFoundMessage = $notFoundMessage;
     }
 
-    public function transform($value)
+    public function transform(mixed $value): mixed
     {
         if (!$value) {
             return null;
@@ -31,7 +24,7 @@ class EnumTransformer implements DataTransformerInterface
         return $cb($value);
     }
 
-    public function reverseTransform($value)
+    public function reverseTransform(mixed $value): mixed
     {
         if (!$value) {
             return null;

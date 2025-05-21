@@ -9,12 +9,12 @@ use Symfony\Component\Form\DataTransformerInterface;
 class DecimalTransformer implements DataTransformerInterface
 {
 
-    public function transform($decimalValue)
+    public function transform(mixed $decimalValue): mixed
     {
         return $decimalValue;
     }
 
-    public function reverseTransform($stringValue)
+    public function reverseTransform(mixed $stringValue): mixed
     {
         if ($stringValue === null) {
             return null;

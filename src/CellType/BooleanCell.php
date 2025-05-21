@@ -1,14 +1,14 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
 use Azuracom\SpreadsheetToObjectBundle\DataTransformer\BooleanTransformer;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class BooleanType extends AbstractType
+class BooleanCell extends AbstractCell
 {
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
 

@@ -8,12 +8,12 @@ services:
     azuracom.spresheet_to_object.factory.handler:
         class: Azuracom\SpreadsheetToObjectBundle\Factory\HandlerFactory
 
-    azuracom.spresheet_to_object.column_type_registry:
-        class: Azuracom\SpreadsheetToObjectBundle\Registry\ColumnTypeRegistry   
+    azuracom.spresheet_to_object.cell_type_registry:
+        class: Azuracom\SpreadsheetToObjectBundle\Registry\CellTypeRegistry   
 
-    Azuracom\SpreadsheetToObjectBundle\ColumnType\:
-        resource: '../src/ColumnType'
-        tags: ['azuracom_spresheet_to_object.column_type']   
+    Azuracom\SpreadsheetToObjectBundle\CellType\:
+        resource: '../src/CellType'
+        tags: ['azuracom_spresheet_to_object.cell_type']   
 
     Azuracom\SpreadsheetToObjectBundle\Twig\:
         resource: '../src/Twig'
@@ -25,4 +25,4 @@ services:
 
     #aliases
     Azuracom\SpreadsheetToObjectBundle\Factory\HandlerFactoryInterface: '@azuracom.spresheet_to_object.factory.handler'
-    Azuracom\SpreadsheetToObjectBundle\Registry\ColumnTypeRegistry: '@azuracom.spresheet_to_object.column_type_registry'
+    Azuracom\SpreadsheetToObjectBundle\Registry\CellTypeRegistry: '@azuracom.spresheet_to_object.cell_type_registry'

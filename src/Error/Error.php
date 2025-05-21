@@ -4,23 +4,17 @@ namespace Azuracom\SpreadsheetToObjectBundle\Error;
 
 class Error
 {
-    private $message;
-    private $code;
-    private $row;
-    private $column;
-
-    public function __construct(string $message, $code = null,$row = null,$column = null)
-    {
-        $this->message = $message;
-        $this->code = $code;
-        $this->row = $row;
-        $this->column = $column;
-    }
+    public function __construct(
+        private string $message,
+        private ?string $code = null,
+        private ?int $row = null,
+        private ?string $column = null
+    ) {}
 
     /**
      * Get the value of message
-     */ 
-    public function getMessage()
+     */
+    public function getMessage(): string
     {
         return $this->message;
     }
@@ -29,8 +23,8 @@ class Error
      * Set the value of message
      *
      * @return  self
-     */ 
-    public function setMessage($message)
+     */
+    public function setMessage(string $message): static
     {
         $this->message = $message;
 
@@ -39,8 +33,8 @@ class Error
 
     /**
      * Get the value of code
-     */ 
-    public function getCode()
+     */
+    public function getCode(): ?string
     {
         return $this->code;
     }
@@ -49,8 +43,8 @@ class Error
      * Set the value of code
      *
      * @return  self
-     */ 
-    public function setCode($code)
+     */
+    public function setCode(?string $code): static
     {
         $this->code = $code;
 
@@ -59,8 +53,8 @@ class Error
 
     /**
      * Get the value of row
-     */ 
-    public function getRow()
+     */
+    public function getRow(): ?int
     {
         return $this->row;
     }
@@ -69,8 +63,8 @@ class Error
      * Set the value of row
      *
      * @return  self
-     */ 
-    public function setRow($row)
+     */
+    public function setRow(?int $row): static
     {
         $this->row = $row;
 
@@ -79,8 +73,8 @@ class Error
 
     /**
      * Get the value of column
-     */ 
-    public function getColumn()
+     */
+    public function getColumn(): ?string
     {
         return $this->column;
     }
@@ -89,8 +83,8 @@ class Error
      * Set the value of column
      *
      * @return  self
-     */ 
-    public function setColumn($column)
+     */
+    public function setColumn(?string $column): static
     {
         $this->column = $column;
 

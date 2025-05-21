@@ -7,7 +7,7 @@ use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
 class RangeReadFilter implements IReadFilter
 {
 
-    private $columns  = array();
+    private array $columns  = array();
 
     public function __construct($columns)
     {

@@ -7,21 +7,16 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
 
 class BooleanTransformer implements DataTransformerInterface
 {
-    /** @var array */
-    private $trueValues;
 
-    /** @var array */
-    private $falseValues;
-
-    public function __construct(array $trueValues, array $falseValues)
-    {
+    public function __construct(
+        private array $trueValues,
+        private array $falseValues
+    ) {
         if (count($trueValues) === 0 || count($falseValues) === 0) {
             throw new \LogicException("True values and false values should countains at least one element");
         }
-        $this->trueValues = $trueValues;
-        $this->falseValues = $falseValues;
     }
-    public function transform($boolvalue)
+    public function transform(mixed $boolvalue): mixed
     {
         if ($boolvalue === null) {
             return null;
@@ -30,7 +25,7 @@ class BooleanTransformer implements DataTransformerInterface
         return $boolvalue ? $this->trueValues[0] : $this->falseValues[0];
     }
 
-    public function reverseTransform($stringValue)
+    public function reverseTransform(mixed $stringValue): mixed
     {
         if ($stringValue === null) {
             return null;

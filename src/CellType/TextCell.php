@@ -1,8 +1,8 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
-class TextType extends AbstractType
+class TextCell extends AbstractCell
 {
     public function hasChangedInner($newValue, $oldValue): bool
     {

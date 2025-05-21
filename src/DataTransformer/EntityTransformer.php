@@ -2,54 +2,28 @@
 
 namespace Azuracom\SpreadsheetToObjectBundle\DataTransformer;
 
-use Azuracom\SpreadsheetToObjectBundle\ColumnType\ColumnTypeInterface;
+use Azuracom\SpreadsheetToObjectBundle\CellType\CellTypeInterface;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
 class EntityTransformer implements DataTransformerInterface
 {
-    private $items = null;
-
-    private $property;
-
-    private $repository;
-
-    private $findCallback;
-
-    private $findMethod;
-
-    private $findArguments;
-
-    private $createIfNotFound;
-
-    private $createCallback;
-
-    private $queryBuilderCallback;
-
-    private $columnType;
+    private ?array $items = null;
+    private ?CellTypeInterface $cellType;
 
     public function __construct(
-        EntityRepository $repository,
-        $property = null,
-        ?callable $findCallback = null,
-        ?string $findMethod = 'findAll',
-        array $findArguments = [],
-        ?callable $queryBuilderCallback = null,
-        bool $createIfNotFound = false,
-        ?callable $createCallback = null
-    ) {
-        $this->repository = $repository;
-        $this->property = $property;
-        $this->findCallback = $findCallback;
-        $this->findMethod = $findMethod;
-        $this->findArguments = $findArguments;
-        $this->createIfNotFound = $createIfNotFound;
-        $this->createCallback = $createCallback;
-        $this->queryBuilderCallback = $queryBuilderCallback;
-    }
+        private EntityRepository $repository,
+        private ?string $property = null,
+        private ?callable $findCallback = null,
+        private ?string $findMethod = 'findAll',
+        private array $findArguments = [],
+        private ?callable $queryBuilderCallback = null,
+        private bool $createIfNotFound = false,
+        private ?callable $createCallback = null
+    ) {}
 
-    public function transform($value)
+    public function transform(mixed $value): mixed
     {
         if ($value === null) {
             return null;
@@ -67,7 +41,7 @@ class EntityTransformer implements DataTransformerInterface
         return call_user_func_array($this->property, [$entity]);
     }
 
-    public function reverseTransform($value)
+    public function reverseTransform(mixed $value): mixed
     {
         if ($value === null) {
             return null;
@@ -107,7 +81,7 @@ class EntityTransformer implements DataTransformerInterface
         return $result;
     }
 
-    protected function iniItems()
+    protected function iniItems(): void
     {
         if ($this->items === null) {
 
@@ -123,20 +97,20 @@ class EntityTransformer implements DataTransformerInterface
         }
     }
 
-    public static function toKey($value)
+    public static function toKey(string $value): string
     {
         return trim(strtolower($value));
     }
 
-    public function getColumnType(): ?ColumnTypeInterface
+    public function getCellType(): ?CellTypeInterface
     {
-        return $this->columnType;
+        return $this->cellType;
     }
 
 
-    public function setColumnType(?ColumnTypeInterface $columnType = null): self
+    public function setCellType(?CellTypeInterface $cellType = null): self
     {
-        $this->columnType = $columnType;
+        $this->cellType = $cellType;
 
         return $this;
     }

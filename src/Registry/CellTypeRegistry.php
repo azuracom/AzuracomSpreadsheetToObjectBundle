@@ -2,23 +2,23 @@
 
 namespace Azuracom\SpreadsheetToObjectBundle\Registry;
 
-use Azuracom\SpreadsheetToObjectBundle\ColumnType\ColumnTypeInterface;
+use Azuracom\SpreadsheetToObjectBundle\CellType\CellTypeInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
-class ColumnTypeRegistry
+class CellTypeRegistry
 {
 
     public function __construct(
-        /** @var ColumnTypeInterface */
-        #[AutowireIterator('azuracom_spresheet_to_object.column_type')]
-        private iterable $columnTypes,
+        /** @var CellTypeInterface */
+        #[AutowireIterator('azuracom_spresheet_to_object.cell_type')]
+        private iterable $CellTypes,
     ) {}
 
-    public function getType(string $className): ColumnTypeInterface
+    public function getType(string $className): CellTypeInterface
     {
         
-        /** @var ColumnTypeInterface */
-        foreach ($this->columnTypes as $type) {
+        /** @var CellTypeInterface */
+        foreach ($this->CellTypes as $type) {
             if(get_class($type) === $className) {
                 return $type;
             }

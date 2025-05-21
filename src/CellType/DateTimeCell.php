@@ -1,14 +1,14 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
 use Azuracom\SpreadsheetToObjectBundle\DataTransformer\DateTimeTransformer;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class DateTimeType extends AbstractType
+class DateTimeCell extends AbstractCell
 {
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
 

@@ -1,11 +1,11 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
 use Azuracom\SpreadsheetToObjectBundle\DataTransformer\PercentTransformer;
 use Symfony\Component\Form\DataTransformerInterface;
 
-class PercentType extends AbstractType
+class PercentCell extends AbstractCell
 {
     public function getDefaultTransformer($options): ?DataTransformerInterface
     {

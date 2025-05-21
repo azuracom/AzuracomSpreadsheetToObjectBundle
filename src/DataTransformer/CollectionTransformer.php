@@ -6,26 +6,15 @@ use Symfony\Component\Form\DataTransformerInterface;
 
 class CollectionTransformer implements DataTransformerInterface
 {
-    /** @var string */
-    private $separator;
-
-    /** @var  DataTransformerInterface|null */
-    private $itemTransformer;
-
-    /** @var  callable|null */
-    private $collectionConstruct;
-
     public function __construct(
-        string $separator,
-        ?callable $collectionConstruct,
-        ?DataTransformerInterface $itemTransformer = null
+        private string $separator,
+        private ?callable $collectionConstruct,
+        private ?DataTransformerInterface $itemTransformer = null
     ) {
-        $this->itemTransformer = $itemTransformer;
-        $this->separator = $separator;
-        $this->collectionConstruct = $collectionConstruct;
+
     }
 
-    public function transform($collection)
+    public function transform(mixed $collection): mixed
     {
         if ($collection === null || count($collection) == 0) {
             return null;
@@ -41,7 +30,7 @@ class CollectionTransformer implements DataTransformerInterface
     }
 
 
-    public function reverseTransform($string)
+    public function reverseTransform(mixed $string): mixed
     {
         $construct = $this->collectionConstruct;
         $collection = $construct ? $construct() : [];

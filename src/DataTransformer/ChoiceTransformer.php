@@ -8,24 +8,15 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
 class ChoiceTransformer implements DataTransformerInterface
 {
 
-    private $choices;
-    private $notFoundMessage;
-    private $notFoundMessageShowValues;
-    private $caseSensitive;
-
     public function __construct(
-        array $choices,
-        string $notFoundMessage,
-        bool $notFoundMessageShowValues,
-        bool $caseSensitive
+        private array $choices,
+        private string $notFoundMessage,
+        private bool $notFoundMessageShowValues,
+        private bool $caseSensitive
     ) {
-        $this->choices = $choices;
-        $this->notFoundMessage = $notFoundMessage;
-        $this->notFoundMessageShowValues = $notFoundMessageShowValues;
-        $this->caseSensitive = $caseSensitive;
     }
 
-    public function transform($value)
+    public function transform(mixed $value): mixed
     {
         if ($value === null) {
             return null;
@@ -34,7 +25,7 @@ class ChoiceTransformer implements DataTransformerInterface
         return array_search($value, $this->choices);
     }
 
-    public function reverseTransform($value)
+    public function reverseTransform(mixed $value): mixed
     {
         if ($value === null) {
             return null;

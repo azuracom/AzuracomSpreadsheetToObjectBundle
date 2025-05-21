@@ -1,13 +1,13 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
 use Azuracom\SpreadsheetToObjectBundle\DataTransformer\EntityTransformer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class EntityType extends AbstractType
+class EntityCell extends AbstractCell
 {
     private $em;
 
@@ -16,7 +16,7 @@ class EntityType extends AbstractType
         $this->em = $em;
     }
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
 
@@ -53,7 +53,7 @@ class EntityType extends AbstractType
             $options['create_if_not_found'],
             $options['create_callback']
         );
-        $transformer->setColumnType($this);
+        $transformer->setCellType($this);
 
         return $transformer;
     }

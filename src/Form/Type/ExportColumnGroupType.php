@@ -10,7 +10,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ExportColumnGroupType extends AbstractType
 {
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
             ->add('check', CheckboxType::class, [
@@ -21,7 +21,7 @@ class ExportColumnGroupType extends AbstractType
     }
 
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
             ->setDefined('entry_type')
@@ -29,8 +29,8 @@ class ExportColumnGroupType extends AbstractType
             ->setAllowedTypes('entry_type', 'string');
 
         $resolver
-            ->setDefault('column_key', null)
-            ->setAllowedTypes('column_key', ['string', 'null']);
+            ->setDefault('cell_key', null)
+            ->setAllowedTypes('cell_key', ['string', 'null']);
 
         $resolver
             ->setDefault('entry_options', [
@@ -39,7 +39,7 @@ class ExportColumnGroupType extends AbstractType
             ->setAllowedTypes('entry_options', 'array')
             ->setNormalizer('entry_options',  function (Options $options, $value) {
                 return array_merge([
-                    'column_key' => $options['column_key'],
+                    'cell_key' => $options['cell_key'],
                 ], $value);
             });
     }

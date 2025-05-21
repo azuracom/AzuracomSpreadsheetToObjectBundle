@@ -10,30 +10,19 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
 class AttributeValueSelectValueTransformer implements DataTransformerInterface
 {
 
-    private $attribute;
-    private $choiceSeparator;
-    private $defaultLocale;
-    private $caseSensitive;
-    private $createChoiceCallback;
-
     public function __construct(
-        AttributeInterface $attribute,
-        string $defaultLocale,
-        string $choiceSeparator = ',',
-        bool $caseSensitive = false,
-        ?callable $createChoiceCallback = null
+        private AttributeInterface $attribute,
+        private string $defaultLocale,
+        private string $choiceSeparator = ',',
+        private bool $caseSensitive = false,
+        private ?callable $createChoiceCallback = null
     ) {
         if ($attribute->getType() !== SelectAttributeType::TYPE) {
             throw new \LogicException(sprintf("Attribute should be of type %s", SelectAttributeType::TYPE));
         }
-        $this->attribute = $attribute;
-        $this->choiceSeparator = $choiceSeparator;
-        $this->defaultLocale = $defaultLocale;
-        $this->caseSensitive = $caseSensitive;
-        $this->createChoiceCallback = $createChoiceCallback;
     }
 
-    public function transform($value)
+    public function transform(mixed $value): mixed
     {
         if (!$value) {
             return null;
@@ -53,7 +42,7 @@ class AttributeValueSelectValueTransformer implements DataTransformerInterface
     }
 
 
-    public function reverseTransform($value)
+    public function reverseTransform(mixed $value): mixed
     {
         if ($value === null) {
             return null;

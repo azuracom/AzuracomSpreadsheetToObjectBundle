@@ -13,13 +13,13 @@ class PercentTransformer implements DataTransformerInterface
         $this->decimalTransformer = new DecimalTransformer();
     }
 
-    public function transform($decimalValue)
+    public function transform(mixed $decimalValue): mixed
     {
         $value = $this->decimalTransformer->transform($decimalValue);
         return $value === null ? null : $value * 100;
     }
 
-    public function reverseTransform($stringValue)
+    public function reverseTransform(mixed $stringValue): mixed
     {
         $value = $this->decimalTransformer->reverseTransform($stringValue);
         return $value === null ? null : $value / 100;

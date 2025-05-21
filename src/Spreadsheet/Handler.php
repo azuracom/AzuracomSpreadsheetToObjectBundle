@@ -2,15 +2,15 @@
 
 namespace Azuracom\SpreadsheetToObjectBundle\Spreadsheet;
 
-use Azuracom\SpreadsheetToObjectBundle\ColumnType\ColumnType;
-use Azuracom\SpreadsheetToObjectBundle\ColumnType\ColumnTypeInterface;
+use Azuracom\SpreadsheetToObjectBundle\CellType\CellType;
+use Azuracom\SpreadsheetToObjectBundle\CellType\CellTypeInterface;
 use Azuracom\SpreadsheetToObjectBundle\Error\Error;
 use Azuracom\SpreadsheetToObjectBundle\Event\Events;
 use Azuracom\SpreadsheetToObjectBundle\Event\PostSetValueEvent;
 use Azuracom\SpreadsheetToObjectBundle\Event\PostSetValuesEvent;
 use Azuracom\SpreadsheetToObjectBundle\Event\PreSetValueEvent;
 use Azuracom\SpreadsheetToObjectBundle\Event\PreSetValuesEvent;
-use Azuracom\SpreadsheetToObjectBundle\Registry\ColumnTypeRegistry;
+use Azuracom\SpreadsheetToObjectBundle\Registry\CellTypeRegistry;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Row;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -23,62 +23,45 @@ class Handler implements \Iterator, HandlerInterface
 {
     const NOT_EDITABLE_CODE = 13;
 
-    /** @var  ColumnTypeInterface[] */
-    protected $columnTypes = [];
+    /** @var  CellTypeInterface[] */
+    protected array $cellTypes = [];
 
-    /** @var ColumnTypeRegistry */
-    protected $registry;
 
-    /** @var ValidatorInterface */
-    protected $validator;
+    protected int $lastColumnIndex = 0;
 
-    /** @var TranslatorInterface */
-    protected $translator;
+    protected int $position = 0;
 
-    protected $dispatcher;
+    protected int $currentRow = 0;
 
-    protected $lastColumnIndex = 0;
+    protected string $currentKey = 'default';
 
-    protected $position = 0;
+    protected bool$trackChanges = false;
 
-    protected $currentRow = 0;
-
-    protected $currentKey = 'default';
-
-    /** @var boolean */
-    protected $trackChanges = false;
-
-    /** @var boolean */
-    protected $autoReset = true;
+    protected bool $autoReset = true;
 
     /** @var Error[] */
-    protected $errors = [];
+    protected array $errors = [];
 
-    /** @var array */
-    protected $changes = [];
+    protected array $changes = [];
 
     public function __construct(
-        ColumnTypeRegistry $registry,
-        ValidatorInterface $validator,
-        EventDispatcherInterface $dispatcher,
-        TranslatorInterface $translator
+        protected CellTypeRegistry $registry,
+        protected ValidatorInterface $validator,
+        protected EventDispatcherInterface $dispatcher,
+        protected TranslatorInterface $translator
     ) {
-        $this->registry = $registry;
-        $this->validator = $validator;
-        $this->dispatcher = $dispatcher;
-        $this->translator = $translator;
     }
 
-    public function add(string $name, ?string $type = null, array $options = []): HandlerInterface
+    public function add(string $name, ?string $type = null, array $options = []): static
     {
-        $type = $type == null ? ColumnType::class : $type;
+        $type = $type == null ? CellType::class : $type;
 
-        /** @var ColumnTypeInterface */
+        /** @var CellTypeInterface */
         $child = clone $this->registry->getType($type);
         $child->setOwner($this);
         $child->init($name, $options);
 
-        $this->columnTypes[] = $child;
+        $this->cellTypes[] = $child;
 
         return $this;
     }
@@ -91,14 +74,14 @@ class Handler implements \Iterator, HandlerInterface
         return $column;
     }
 
-    public function addEventListener(string $eventName, callable $listener, int $priority = 0): HandlerInterface
+    public function addEventListener(string $eventName, callable $listener, int $priority = 0): static
     {
         $this->dispatcher->addListener($eventName, $listener, $priority);
 
         return $this;
     }
 
-    public function setValues($worksheetOrRow, $keys = null): HandlerInterface
+    public function setValues(Row|Worksheet $worksheetOrRow, string|array|null $keys = null): static
     {
         if (!$worksheetOrRow instanceof Row && !$worksheetOrRow instanceof Worksheet) {
             throw new \Exception(sprintf("Param worksheetOrRow should be instance of %s or %s", Row::class, Worksheet::class));
@@ -115,7 +98,7 @@ class Handler implements \Iterator, HandlerInterface
 
         $keys = is_string($keys) ? [$keys] : $keys;
 
-        foreach ($this->columnTypes as $type) {
+        foreach ($this->cellTypes as $type) {
             if (is_array($keys) && !in_array($type->getOption('key'), $keys)) {
                 continue;
             }
@@ -129,24 +112,24 @@ class Handler implements \Iterator, HandlerInterface
         return $this;
     }
 
-    public function getTypeRow(ColumnTypeInterface $type)
+    public function getTypeRow(CellTypeInterface $type): int
     {
         return $type->getOption('row') ? $type->getOption('row') : $this->currentRow;
     }
 
 
-    public function setSheetHeader(Worksheet $sheet, int $rowNumber = 1): HandlerInterface
+    public function setSheetHeader(Worksheet $sheet, int $rowNumber = 1): static
     {
-        foreach ($this->columnTypes as $type) {
+        foreach ($this->cellTypes as $type) {
             $sheet->setCellValue($type->getColumn() . $rowNumber,  $this->translator->trans($type->getLabel()));
         }
 
         return $this;
     }
 
-    public function setSheetHeaderComments(Worksheet $sheet, int $rowNumber = 1): HandlerInterface
+    public function setSheetHeaderComments(Worksheet $sheet, int $rowNumber = 1): static
     {
-        foreach ($this->columnTypes as $type) {
+        foreach ($this->cellTypes as $type) {
             if ($comment = $type->getOption('column_comment')) {
                 $sheet->getComment($type->getColumn() . $rowNumber)->getText()->createText($comment);
             }
@@ -159,9 +142,9 @@ class Handler implements \Iterator, HandlerInterface
         return $this;
     }
 
-    public function setSheetColumnWidth(Worksheet $sheet): HandlerInterface
+    public function setSheetColumnWidth(Worksheet $sheet): static
     {
-        foreach ($this->columnTypes as $type) {
+        foreach ($this->cellTypes as $type) {
             if ($width = $type->getOption('column_width')) {
                 $sheet->getColumnDimension($type->getColumn())->setWidth($width, 'pt');
             }
@@ -170,7 +153,7 @@ class Handler implements \Iterator, HandlerInterface
         return $this;
     }
 
-    public function setSheetRowContent(Worksheet $sheet, $data, ?int $rowNumber = null, ?string $key = null): HandlerInterface
+    public function setSheetRowContent(Worksheet $sheet, mixed $data, ?int $rowNumber = null, ?string $key = null): static
     {
         if ($rowNumber) {
             $this->currentRow = $rowNumber;
@@ -178,29 +161,31 @@ class Handler implements \Iterator, HandlerInterface
 
         $key = $key ?? $this->getCurrentKey();
 
-        foreach ($this->columnTypes as $type) {
-            if ($type->isDataMapped($data, $key)) {
-                $coordinates = $type->getColumn() . $this->getTypeRow($type);
-                $type->resetValues();
-                $value = $type->getDataValue($data);
-                $cell = $sheet->getCell($coordinates);
-                $cell->setValue($value);
+        foreach ($this->cellTypes as $type) {
+            if (!$type->isDataMapped($data, $key)) {
+                continue;
+            }
 
-                if ($styles = $type->getOption('cell_styles')) {
-                    $styles = is_callable($styles) ? $styles($data, $value, $type) : $styles;
-                    $cell->getStyle()->applyFromArray($styles);
-                }
+            $coordinates = $type->getColumn() . $this->getTypeRow($type);
+            $type->resetValues();
+            $value = $type->getDataValue($data);
+            $cell = $sheet->getCell($coordinates);
+            $cell->setValue($value);
 
-                if ($cb = $type->getOption('cell_callback')) {
-                    $cb($cell, $data, $type);
-                }
+            if ($styles = $type->getOption('cell_styles')) {
+                $styles = is_callable($styles) ? $styles($data, $value, $type) : $styles;
+                $cell->getStyle()->applyFromArray($styles);
+            }
+
+            if ($cb = $type->getOption('cell_callback')) {
+                $cb($cell, $data, $type);
             }
         }
 
         return $this;
     }
 
-    public static function int2ExcelColumn($num)
+    public static function int2ExcelColumn(int $num): string
     {
         $numeric = $num % 26;
         $letter = chr(65 + $numeric);
@@ -213,10 +198,10 @@ class Handler implements \Iterator, HandlerInterface
     }
 
 
-    public function get(string $name, ?string $key = null): ?ColumnTypeInterface
+    public function get(string $name, ?string $key = null): ?CellTypeInterface
     {
         $key = $key ?? $this->getCurrentKey();
-        foreach ($this->columnTypes as $child) {
+        foreach ($this->cellTypes as $child) {
             if ($name === $child->getName() && $child->getOption('key') === $key) {
                 return $child;
             }
@@ -225,7 +210,7 @@ class Handler implements \Iterator, HandlerInterface
         return null;
     }
 
-    public function setDataValues(&$data, ?array $validationGroups = null, ?string $key = null): HandlerInterface
+    public function setDataValues(mixed &$data, ?array $validationGroups = null, ?string $key = null): static
     {
         $key = $key ?? $this->getCurrentKey();
         if ($this->autoReset) {
@@ -240,7 +225,7 @@ class Handler implements \Iterator, HandlerInterface
         }
 
         //first assign all values
-        foreach ($this->columnTypes as $type) {
+        foreach ($this->cellTypes as $type) {
             //check if the conf is ok for the current data object and setter is required
             if (!$type->isDataMapped($data, $key) || ($type->getOption('setter') === false)) {
                 continue;
@@ -334,7 +319,7 @@ class Handler implements \Iterator, HandlerInterface
             $column = null;
             $row = $this->currentRow;
 
-            foreach ($this->columnTypes as $type) {
+            foreach ($this->cellTypes as $type) {
                 $errorMatchPath = $type->getOption('error_match_path');
                 if (
                     ($type->getName() == $name || ($errorMatchPath && preg_match("#$errorMatchPath#", $name))) &&
@@ -367,9 +352,9 @@ class Handler implements \Iterator, HandlerInterface
         return $this;
     }
 
-    public function getColumnTypes(): array
+    public function getCellTypes(): array
     {
-        return $this->columnTypes;
+        return $this->cellTypes;
     }
 
     //iterator stuff
@@ -378,12 +363,12 @@ class Handler implements \Iterator, HandlerInterface
         $this->position = 0;
     }
 
-    public function current()
+    public function current(): mixed
     {
-        return $this->columnTypes[$this->position];
+        return $this->cellTypes[$this->position];
     }
 
-    public function key()
+    public function key(): mixed
     {
         return $this->position;
     }
@@ -395,7 +380,7 @@ class Handler implements \Iterator, HandlerInterface
 
     public function valid(): bool
     {
-        return isset($this->columnTypes[$this->position]);
+        return isset($this->cellTypes[$this->position]);
     }
 
     /**
@@ -411,7 +396,7 @@ class Handler implements \Iterator, HandlerInterface
      *
      * @return  self
      */
-    public function setCurrentKey(string $currentKey): HandlerInterface
+    public function setCurrentKey(string $currentKey): static
     {
         $this->currentKey = $currentKey;
 
@@ -419,7 +404,7 @@ class Handler implements \Iterator, HandlerInterface
     }
 
     /**
-     * Get the value of errors
+     * @return Error[]
      */
     public function getErrors(): array
     {
@@ -444,9 +429,9 @@ class Handler implements \Iterator, HandlerInterface
         return count($this->changes) > 0;
     }
 
-    public function hasKey($key): bool
+    public function hasKey(string|int $key): bool
     {
-        foreach ($this->columnTypes as $type) {
+        foreach ($this->cellTypes as $type) {
             if ($type->getOption('key') === $key) {
                 return true;
             }
@@ -469,7 +454,7 @@ class Handler implements \Iterator, HandlerInterface
      *
      * @return  self
      */
-    public function setTrackChanges($trackChanges): HandlerInterface
+    public function setTrackChanges(bool $trackChanges): static
     {
         $this->trackChanges = $trackChanges;
 
@@ -477,14 +462,14 @@ class Handler implements \Iterator, HandlerInterface
     }
 
 
-    public function resetChanges(): HandlerInterface
+    public function resetChanges(): static
     {
         $this->changes = [];
 
         return $this;
     }
 
-    public function resetErrors(): HandlerInterface
+    public function resetErrors(): static
     {
         $this->errors = [];
 
@@ -504,7 +489,7 @@ class Handler implements \Iterator, HandlerInterface
      *
      * @return  self
      */
-    public function setAutoReset(bool $autoReset): HandlerInterface
+    public function setAutoReset(bool $autoReset): static
     {
         $this->autoReset = $autoReset;
 
@@ -515,11 +500,11 @@ class Handler implements \Iterator, HandlerInterface
     {
         $column = null;
         $maxValue = 0;
-        foreach ($this->columnTypes as $columnType) {
-            $value = Coordinate::columnIndexFromString($columnType->getColumn());
+        foreach ($this->cellTypes as $CellType) {
+            $value = Coordinate::columnIndexFromString($CellType->getColumn());
             if ($value > $maxValue) {
                 $maxValue = $value;
-                $column = $columnType->getColumn();
+                $column = $CellType->getColumn();
             }
         }
 
@@ -529,9 +514,9 @@ class Handler implements \Iterator, HandlerInterface
     public function getSortedColumns(): array
     {
         $columns = [];
-        foreach ($this->columnTypes as $columnType) {
-            $index = Coordinate::columnIndexFromString($columnType->getColumn());
-            $columns[$index] = $columnType;
+        foreach ($this->cellTypes as $CellType) {
+            $index = Coordinate::columnIndexFromString($CellType->getColumn());
+            $columns[$index] = $CellType;
         }
 
         ksort($columns);

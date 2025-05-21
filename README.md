@@ -253,7 +253,7 @@ yarn add sortablejs
 
 namespace App\Form\Filter;
 
-use Azuracom\SpreadsheetToObjectBundle\ColumnType\TextType;
+use Azuracom\SpreadsheetToObjectBundle\ColumnType\TextCell;
 use Azuracom\SpreadsheetToObjectBundle\Form\Type\ExportColumnCheckboxType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -266,7 +266,7 @@ class ExportCustomerColumFilter extends AbstractType
                 'label' => 'Prénom', //will override column_options.label and be used to set file header
                 //column stuff configuration
                 'column_name' => '[firstname]', //not mandatory if equal to form name, NB this notation is used because customer data is an array and not an entity
-                'column_type' => TextType::class, //default value
+                'column_type' => TextCell::class, //default value
                 'column_options' => [
                     //check column type to retrieve available options
                     'empty_data' => 'Indéfini', //value returned when data is null

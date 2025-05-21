@@ -1,6 +1,6 @@
 <?php
 
-namespace Azuracom\SpreadsheetToObjectBundle\ColumnType;
+namespace Azuracom\SpreadsheetToObjectBundle\CellType;
 
 use Symfony\Component\Form\DataTransformerInterface;
 use Azuracom\SpreadsheetToObjectBundle\Spreadsheet\HandlerInterface;
@@ -11,7 +11,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\Validator\Constraint;
 
-abstract class AbstractType implements ColumnTypeInterface
+abstract class AbstractCell implements CellTypeInterface
 {
     const ACCESSOR_DEFAULT = 'accessor_default';
     const ACCESSOR_MANUAL = 'accessor_manual';
@@ -51,7 +51,7 @@ abstract class AbstractType implements ColumnTypeInterface
      * @var string $column excel column (ex: A, AF,ZZZ)
      * @var string $name an unique name to identifiy this
      */
-    public function init(string $name, array $options = [])
+    public function init(string $name, array $options = []): void
     {
         $this->name = $name;
 
@@ -67,7 +67,7 @@ abstract class AbstractType implements ColumnTypeInterface
         $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
     }
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         //default values
         $resolver->setDefaults([
@@ -191,12 +191,12 @@ abstract class AbstractType implements ColumnTypeInterface
         });
     }
 
-    public function isDataMapped($data, $key): bool
+    public function isDataMapped(mixed $data, string $key): bool
     {
         return $this->options['key'] === $key;
     }
 
-    public function guessAccessorType($value)
+    public function guessAccessorType(mixed $value): ?string
     {
         if (is_null($value)) {
             return self::ACCESSOR_DEFAULT;
@@ -211,14 +211,13 @@ abstract class AbstractType implements ColumnTypeInterface
         return null;
     }
 
-    public function getDataValue($data, bool $transformed = true)
+    public function getDataValue(mixed $data, bool $transformed = true): mixed
     {
         $getter = $this->getOption('getter');
 
         if ($getter === false) {
-            return;
+            return null;
         }
-
         $value = null;
         switch ($this->getterType) {
             case self::ACCESSOR_DEFAULT:
@@ -252,11 +251,11 @@ abstract class AbstractType implements ColumnTypeInterface
         return $value;
     }
 
-    public function setDataValue(&$data, $value)
+    public function setDataValue(mixed &$data, mixed $value): mixed
     {
         $setter = $this->getOption('setter');
         if ($setter === false) {
-            return;
+            return null;
         }
 
         switch ($this->setterType) {
@@ -287,7 +286,7 @@ abstract class AbstractType implements ColumnTypeInterface
         return $value;
     }
 
-    public function getOption(string $name, $defaultValue = null)
+    public function getOption(string $name, mixed $defaultValue = null): mixed
     {
         $value = isset($this->options[$name]) ? $this->options[$name] : null;
         return $value !== null ? $value : $defaultValue;
@@ -298,7 +297,7 @@ abstract class AbstractType implements ColumnTypeInterface
         return $this->getOption('label', $this->getName());
     }
 
-    public function dataCanBeUpdated($data, $newValue, $oldValue): bool
+    public function dataCanBeUpdated(mixed $data, mixed $newValue, mixed $oldValue): bool
     {
         $allowUpdate = $this->getOption('allow_update');
         return is_bool($allowUpdate) ? $allowUpdate : $allowUpdate($data, $newValue, $oldValue);
@@ -317,7 +316,7 @@ abstract class AbstractType implements ColumnTypeInterface
      *
      * @return  self
      */
-    public function setName($name): ColumnTypeInterface
+    public function setName($name): static
     {
         $this->name = $name;
 
@@ -342,7 +341,7 @@ abstract class AbstractType implements ColumnTypeInterface
     /**
      * Get the value of value
      */
-    public function getValue($transformation = 'reverseTransform')
+    public function getValue(?string $transformation = 'reverseTransform'): mixed
     {
         $value = $this->value;
 
@@ -383,7 +382,7 @@ abstract class AbstractType implements ColumnTypeInterface
      *
      * @return  self
      */
-    public function setValue($value): ColumnTypeInterface
+    public function setValue(mixed $value): static
     {
         $this->value = $value;
 
@@ -403,7 +402,7 @@ abstract class AbstractType implements ColumnTypeInterface
      *
      * @return  self
      */
-    public function setOwner(HandlerInterface $owner)
+    public function setOwner(HandlerInterface $owner): static
     {
         $this->owner = $owner;
 
@@ -420,7 +419,7 @@ abstract class AbstractType implements ColumnTypeInterface
         return StringUtil::fqcnToBlockPrefix(static::class) ?: '';
     }
 
-    public function hasChanged($newValue, $oldValue): bool
+    public function hasChanged(mixed $newValue, mixed $oldValue): bool
     {
         if ($callback = $this->getOption('has_changed_callback')) {
             return $callback($newValue, $oldValue);
@@ -437,13 +436,13 @@ abstract class AbstractType implements ColumnTypeInterface
         return $this->hasChangedInner($newValue, $oldValue);
     }
 
-    public function hasChangedInner($newValue, $oldValue): bool
+    public function hasChangedInner(mixed $newValue, mixed $oldValue): bool
     {
         return $newValue !== $oldValue;
     }
 
 
-    public function addTransformer(DataTransformerInterface $transformer, $forceAppend = false): ColumnTypeInterface
+    public function addTransformer(DataTransformerInterface $transformer, $forceAppend = false): static
     {
         if ($forceAppend) {
             $this->transformers[] = $transformer;
@@ -454,14 +453,14 @@ abstract class AbstractType implements ColumnTypeInterface
         return $this;
     }
 
-    public function resetModelTransformers(): ColumnTypeInterface
+    public function resetModelTransformers(): static
     {
         $this->transformers = [];
 
         return $this;
     }
 
-    public function resetValues(): ColumnTypeInterface
+    public function resetValues(): static
     {
         $this->value = null;
         $this->transformedValue = null;

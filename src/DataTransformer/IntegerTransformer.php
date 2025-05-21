@@ -8,12 +8,12 @@ use Symfony\Component\Form\DataTransformerInterface;
 class IntegerTransformer implements DataTransformerInterface
 {
 
-    public function transform($intValue)
+    public function transform(mixed $intValue): mixed
     {
         return $intValue;
     }
 
-    public function reverseTransform($stringValue)
+    public function reverseTransform(mixed $stringValue): mixed
     {
         if ($stringValue === null) {
             return null;
