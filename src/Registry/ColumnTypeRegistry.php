@@ -14,15 +14,16 @@ class ColumnTypeRegistry
         private iterable $columnTypes,
     ) {}
 
-    public function getType($name): ColumnTypeInterface
+    public function getType(string $className): ColumnTypeInterface
     {
+        
         /** @var ColumnTypeInterface */
         foreach ($this->columnTypes as $type) {
-            if ($type->getName() === $name) {
+            if(get_class($type) === $className) {
                 return $type;
             }
         }
 
-        throw new \InvalidArgumentException(sprintf('Column type "%s" not found.', $name));
+        throw new \InvalidArgumentException(sprintf('Column type "%s" not found.', $className));
     }
 }
