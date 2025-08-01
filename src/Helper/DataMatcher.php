@@ -35,7 +35,7 @@ class DataMatcher
     }
 
     public function addMatch(
-        string $match,
+        string|array $match,
         string|int $matchKey = 0,
         ?string $type = null,
         string|int|null $uniqueId = null
