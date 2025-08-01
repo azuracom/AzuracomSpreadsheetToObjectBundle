@@ -6,9 +6,9 @@ class DataMatcher
 {
     protected array $datas = [];
     protected array $matches = [];
-    protected ?callable $keyFormatterCallback = null;
+    protected ?\Closure $keyFormatterCallback = null;
     protected mixed $currentUniqueId = null;
-    protected string $currentType = null;
+    protected ?string $currentType = null;
     protected array $adder = [];
 
     public function reset(?array $types = null)
@@ -183,7 +183,7 @@ class DataMatcher
      */
     public function setKeyFormatterCallback(?callable $keyFormatterCallback = null)
     {
-        $this->keyFormatterCallback = $keyFormatterCallback;
+        $this->keyFormatterCallback = \Closure::fromCallable($keyFormatterCallback);
 
         return $this;
     }

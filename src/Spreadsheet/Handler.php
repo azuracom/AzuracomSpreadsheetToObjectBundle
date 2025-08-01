@@ -66,6 +66,19 @@ class Handler implements \Iterator, HandlerInterface
         return $this;
     }
 
+    public function remove(string $name, ?string $key = null): static
+    {
+        $key = $key ?? $this->getCurrentKey();
+        foreach ($this->cellTypes as $index => $child) {
+            if ($child->getName() === $name && $child->getOption('key') === $key) {
+                unset($this->cellTypes[$index]);
+                break;
+            }
+        }
+
+        return $this;
+    }   
+
     public function getDefaultColumn(): string
     {
         $column = self::int2ExcelColumn($this->lastColumnIndex);

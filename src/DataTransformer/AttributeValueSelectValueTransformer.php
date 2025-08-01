@@ -10,15 +10,21 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
 class AttributeValueSelectValueTransformer implements DataTransformerInterface
 {
 
+    private ?\Closure $createChoiceCallback = null;
+
     public function __construct(
         private AttributeInterface $attribute,
         private string $defaultLocale,
         private string $choiceSeparator = ',',
         private bool $caseSensitive = false,
-        private ?callable $createChoiceCallback = null
+        ?callable $createChoiceCallback = null
     ) {
         if ($attribute->getType() !== SelectAttributeType::TYPE) {
             throw new \LogicException(sprintf("Attribute should be of type %s", SelectAttributeType::TYPE));
+        }
+
+        if ($createChoiceCallback) {
+            $this->createChoiceCallback = \Closure::fromCallable($createChoiceCallback);
         }
     }
 

@@ -11,17 +11,34 @@ class EntityTransformer implements DataTransformerInterface
 {
     private ?array $items = null;
     private ?CellTypeInterface $cellType;
+    private ?\Closure $findCallback = null;
+    private ?\Closure $queryBuilderCallback = null;
+    private ?\Closure $createCallback = null;
 
     public function __construct(
         private EntityRepository $repository,
         private ?string $property = null,
-        private ?callable $findCallback = null,
+        ?callable $findCallback = null,
         private ?string $findMethod = 'findAll',
         private array $findArguments = [],
-        private ?callable $queryBuilderCallback = null,
+        ?callable $queryBuilderCallback = null,
         private bool $createIfNotFound = false,
-        private ?callable $createCallback = null
-    ) {}
+        ?callable $createCallback = null
+    ) {
+        if ($findCallback) {
+            $this->findCallback = \Closure::fromCallable($findCallback);
+        }
+
+        if ($queryBuilderCallback) {
+            $this->queryBuilderCallback = \Closure::fromCallable($queryBuilderCallback);
+        }
+
+        if ($createCallback) {
+            $this->createCallback = \Closure::fromCallable($createCallback);
+        }
+
+
+    }
 
     public function transform(mixed $value): mixed
     {

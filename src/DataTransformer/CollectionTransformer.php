@@ -6,12 +6,17 @@ use Symfony\Component\Form\DataTransformerInterface;
 
 class CollectionTransformer implements DataTransformerInterface
 {
+
+    private ?\Closure $collectionConstruct = null;
+
     public function __construct(
         private string $separator,
-        private ?callable $collectionConstruct,
+        ?callable $collectionConstruct,
         private ?DataTransformerInterface $itemTransformer = null
     ) {
-
+        if ($collectionConstruct) {
+            $this->collectionConstruct = \Closure::fromCallable($collectionConstruct);
+        }
     }
 
     public function transform(mixed $collection): mixed

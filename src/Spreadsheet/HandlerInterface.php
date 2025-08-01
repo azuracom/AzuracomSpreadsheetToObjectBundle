@@ -9,6 +9,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 interface HandlerInterface
 {
     public function add(string $name, ?string $type = null, array $options = []): static;
+    public function remove(string $name, ?string $key = null): static;
     public function addEventListener(string $eventName, callable $listener, int $priority = 0): static;
     public function setValues(Row|Worksheet $worksheetOrRow,string|array|null $keys = null): static;
     public function setSheetHeader(Worksheet $sheet, int $rowNumber = 1): static;
