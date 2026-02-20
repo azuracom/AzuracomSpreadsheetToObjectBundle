@@ -84,6 +84,7 @@ class EntityTransformer implements DataTransformerInterface
             } else {
                 $className = $this->repository->getClassName();
                 $result = new $className();
+                $result->{"set" . $this->property}($value);
                 if ($this->createCallback) {
                     $createResult = call_user_func_array($this->createCallback, [$result, $value, $this]);
                     if ($createResult === false) {
@@ -92,6 +93,10 @@ class EntityTransformer implements DataTransformerInterface
                         ]);
                     }
                 }
+
+                // Add to items to avoid multiple creation if the same value appears multiple times in the spreadsheet
+                $this->repository->getEntityManager()->persist($result);
+                $this->items[self::toKey($value)] = $result;
             }
         }
 
