@@ -14,10 +14,11 @@ class EntityTransformer implements DataTransformerInterface
     private ?\Closure $findCallback = null;
     private ?\Closure $queryBuilderCallback = null;
     private ?\Closure $createCallback = null;
+    private \Closure|string|null $property = null;
 
     public function __construct(
         private EntityRepository $repository,
-        private ?string $property = null,
+        callable|string|null $property = null,
         ?callable $findCallback = null,
         private ?string $findMethod = 'findAll',
         private array $findArguments = [],
@@ -35,6 +36,12 @@ class EntityTransformer implements DataTransformerInterface
 
         if ($createCallback) {
             $this->createCallback = \Closure::fromCallable($createCallback);
+        }
+
+        if($property && !is_string($property)) {
+            $this->property = \Closure::fromCallable($property);
+        } else {
+            $this->property = $property;
         }
 
 

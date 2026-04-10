@@ -73,6 +73,8 @@ abstract class AbstractCell implements CellTypeInterface
         $resolver->setDefaults([
             //label used for create excel header
             'label' => null,
+            // If defined the label will be translated with this translation domain
+            'label_translation_domain' => null,
             /*
             null: reuse name to create a setter (name = "some.randome.name.code",methode "setCode" will be called)
             callable: use a callback function to modify data with arguments($data,$this)

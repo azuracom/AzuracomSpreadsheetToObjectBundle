@@ -246,6 +246,8 @@ class Handler implements \Iterator, HandlerInterface
 
             $column = $type->getColumn();
             $columnLabel = $type->getOption('label');
+            $labelTranslationDomain = $type->getOption('label_translation_domain');
+        
             $row = $this->getTypeRow($type);
 
             //try to catch transformer exception            
@@ -259,15 +261,20 @@ class Handler implements \Iterator, HandlerInterface
                 }
 
                 $oldValue = $type->getDataValue($data, false);
+                $constraints = $type->getOption('constraints', []);
 
-                if ($type->hasChanged($newValue, $oldValue)) {
+                if (
+                    $type->hasChanged($newValue, $oldValue) || // If value has changed
+                    // if any constraints check the value even if not changes to ensure data from file is valid (e.g.: if notBlankConstraint , initial value is null new value is null, but value is not valid because notBlank)
+                    !empty($constraints) 
+                ) {
                     //validate conf contraints
                     $valueErrors = $this->validator->validate($newValue, $type->getOption('constraints'));
                     foreach ($valueErrors as $error) {
                         $message = $this->translator->trans("azuracom_spreadsheet_to_object.row_handler.error_at_column", [
                             '%row%' => $row,
                             '%column%' => $column,
-                            '%column_label%' => $columnLabel,
+                            '%column_label%' => $labelTranslationDomain ? $this->translator->trans($columnLabel, [], $labelTranslationDomain) : $columnLabel,
                             '%error%' => $error->getMessage()
                         ]);
 
