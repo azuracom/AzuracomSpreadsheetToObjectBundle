@@ -31,4 +31,6 @@ interface HandlerInterface
     public function getAutoReset(): bool;
     public function setAutoReset(bool $autoReset): HandlerInterface;
     public function getLastColumn(): ?string;
+    public function getUseCalculatedValue(): bool;
+    public function setUseCalculatedValue(bool $useCalculatedValue): HandlerInterface;
 }

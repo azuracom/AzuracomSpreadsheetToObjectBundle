@@ -51,6 +51,9 @@ class Handler implements \Iterator, HandlerInterface
     /** @var boolean */
     protected $autoReset = true;
 
+    /** @var boolean */
+    protected $useCalculatedValue = true;
+
     /** @var Error[] */
     protected $errors = [];
 
@@ -123,7 +126,7 @@ class Handler implements \Iterator, HandlerInterface
             $coordinate = $type->getColumn() . $this->getTypeRow($type);
             $cell = $worksheet->getCell($coordinate);
             $type->resetValues();
-            $type->setValue($cell->getCalculatedValue());
+            $type->setValue($this->useCalculatedValue ? $cell->getCalculatedValue() : $cell->getValue());
         }
 
         return $this;
@@ -537,5 +540,25 @@ class Handler implements \Iterator, HandlerInterface
         ksort($columns);
 
         return $columns;
+    }
+
+    /**
+     * Get the value of useCalculatedValue
+     */ 
+    public function getUseCalculatedValue(): bool
+    {
+        return $this->useCalculatedValue;
+    }
+
+    /**
+     * Set the value of useCalculatedValue
+     *
+     * @return  self
+     */ 
+    public function setUseCalculatedValue(bool $useCalculatedValue): HandlerInterface
+    {
+        $this->useCalculatedValue = $useCalculatedValue;
+
+        return $this;
     }
 }
