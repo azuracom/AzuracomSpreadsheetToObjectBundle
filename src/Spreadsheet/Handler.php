@@ -35,7 +35,9 @@ class Handler implements \Iterator, HandlerInterface
 
     protected string $currentKey = 'default';
 
-    protected bool$trackChanges = false;
+    protected bool $trackChanges = false;
+
+    protected bool $useCalculatedValue = true;
 
     protected bool $autoReset = true;
 
@@ -116,10 +118,14 @@ class Handler implements \Iterator, HandlerInterface
                 continue;
             }
 
+            $useCalculatedValue = $type->getOption('use_calculated_value') !== null ? 
+                $type->getOption('use_calculated_value') : 
+                $this->useCalculatedValue;
+
             $coordinate = $type->getColumn() . $this->getTypeRow($type);
             $cell = $worksheet->getCell($coordinate);
             $type->resetValues();
-            $type->setValue($cell->getCalculatedValue());
+            $type->setValue($useCalculatedValue ? $cell->getCalculatedValue() : $cell->getValue());
         }
 
         return $this;
@@ -542,5 +548,17 @@ class Handler implements \Iterator, HandlerInterface
         ksort($columns);
 
         return $columns;
+    }
+
+    public function getUseCalculatedValue(): bool
+    {
+        return $this->useCalculatedValue;
+    }
+
+    public function setUseCalculatedValue(bool $useCalculatedValue): static
+    {
+        $this->useCalculatedValue = $useCalculatedValue;
+
+        return $this;
     }
 }

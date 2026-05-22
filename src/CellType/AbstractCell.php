@@ -116,6 +116,10 @@ abstract class AbstractCell implements CellTypeInterface
             //set column comment for export
             'column_comment' => null,
             'column_comment_width' => null,
+            // Define if the value of the cell should be calculated with PhpSpreadsheet or not. If false, the raw value will be used (ex: formula will not be calculated and will be returned as string)
+            // This can be defined for each cell or globally on the Handler with setUseCalculatedValue method
+            // Cell configuration will have priority over global configuration
+            'use_calculated_value' => null,
         ]);
 
         //validation
