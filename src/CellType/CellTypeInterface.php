@@ -13,8 +13,10 @@ interface CellTypeInterface
     public function setName(string $name): static;
     public function configureOptions(OptionsResolver $resolver): void;
     public function getOption(string $name, mixed $defaultValue = null): mixed;
+    public function getOptions(): array;
     public function getLabel(): string;
     public function getColumn(): string;
+    public function setColumn(string $column): static;
     public function getRow(): ?int;
     public function getValue(?string $transformation = 'reverseTransform'): mixed;
     public function setValue($value): static;

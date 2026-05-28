@@ -292,6 +292,11 @@ abstract class AbstractCell implements CellTypeInterface
         return $value;
     }
 
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
+
     public function getOption(string $name, mixed $defaultValue = null): mixed
     {
         $value = isset($this->options[$name]) ? $this->options[$name] : null;
@@ -336,6 +341,14 @@ abstract class AbstractCell implements CellTypeInterface
     {
         return $this->getOption('column');
     }
+
+    public function setColumn(string $column): static
+    {
+        $this->options['column'] = $column;
+
+        return $this;
+    }
+
 
     public function getRow(): ?int
     {
